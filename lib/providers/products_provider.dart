@@ -6,64 +6,80 @@ enum ApiStatus { loading, initial, completed, error }
 
 class ProductProvider extends ChangeNotifier {
   List<Result> _productList = [];
+  List<Result> _filteredList = [];
+  bool _isFiltered = false;
 
-  List<Result> _productListbyCategory = [];
-
-  List<Result> get productList =>
-      categorySelected == false ? _productList : _productListbyCategory;
-
-  bool categorySelected = false;
-
-  String? _categoryNameReceived;
+  final Set<String> _favoriteIds = {};
+  final Map<String, double> _ratings = {};
 
   ApiStatus _apiDataStatus = ApiStatus.initial;
-
   ApiStatus get apidatastatus => _apiDataStatus;
 
-  bool get isfavorite => _isFavorite;
-  bool _isFavorite = false;
-  
-  //get the all products fetch from internet or from assets file.
+  List<Result> get productList =>
+      _isFiltered ? _filteredList : _productList;
+
+  Set<String> get favorites => Set.unmodifiable(_favoriteIds);
+
+  bool isFavorite(String? id) => id != null && _favoriteIds.contains(id);
+
+  double getRating(String? id) => id != null ? (_ratings[id] ?? 0.0) : 0.0;
+
   void getProducts() async {
     _apiDataStatus = ApiStatus.loading;
-
-    _productList = await ProductServices().fetchProducts();
-
-    _apiDataStatus = ApiStatus.completed;
     notifyListeners();
-  }
 
-  //filter products by category & show the item
-  void filterByCate(String categoryName) {
-    if (_categoryNameReceived != categoryName ||
-        _categoryNameReceived == null) {
-      categorySelected = true;
-      _productListbyCategory = _productList
-          .where((element) => element.category == categoryName)
-          .toList();
-      _categoryNameReceived = categoryName;
-    } else {
-      categorySelected = !categorySelected;
+    try {
+      _productList = await ProductServices().fetchProducts();
+      _apiDataStatus = ApiStatus.completed;
+    } catch (_) {
+      _apiDataStatus = ApiStatus.error;
     }
-
     notifyListeners();
   }
 
-  //search by the model name
-  void searchByModel(String searchModelName) {
-    categorySelected = true;
-
-    _productListbyCategory = _productList
-        .where((element) => element.model == searchModelName.toUpperCase())
+  void filterByCate(String categoryName) {
+    _isFiltered = true;
+    _filteredList = _productList
+        .where((e) => e.category == categoryName.toLowerCase())
         .toList();
-
     notifyListeners();
   }
 
-  //make favorite in the details of the produvts screen heart icon
-  void makeFavorite() {
-    _isFavorite = !_isFavorite;
+  void clearFilter() {
+    _isFiltered = false;
+    _filteredList = [];
+    notifyListeners();
+  }
 
+  void searchByModel(String query) {
+    if (query.isEmpty) {
+      clearFilter();
+      return;
+    }
+    _isFiltered = true;
+    final q = query.toLowerCase();
+    _filteredList = _productList
+        .where((e) =>
+            (e.model?.toLowerCase().contains(q) ?? false) ||
+            (e.name?.toLowerCase().contains(q) ?? false) ||
+            (e.brand?.toLowerCase().contains(q) ?? false))
+        .toList();
+    notifyListeners();
+  }
+
+  void toggleFavorite(String? id) {
+    if (id == null) return;
+    if (_favoriteIds.contains(id)) {
+      _favoriteIds.remove(id);
+    } else {
+      _favoriteIds.add(id);
+    }
+    notifyListeners();
+  }
+
+  void setRating(String? id, double rating) {
+    if (id == null) return;
+    _ratings[id] = rating;
     notifyListeners();
   }
 }

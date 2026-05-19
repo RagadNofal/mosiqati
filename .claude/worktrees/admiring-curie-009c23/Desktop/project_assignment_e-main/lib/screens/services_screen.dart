@@ -176,7 +176,7 @@ class _ServicesScreenState extends State<ServicesScreen>
                       _fieldLabel(l.t('instrumentType'), theme),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _selectedInstrument,
+                        initialValue: _selectedInstrument,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.music_note),
                           border: OutlineInputBorder(
@@ -292,7 +292,7 @@ class _ServicesScreenState extends State<ServicesScreen>
                       _fieldLabel(l.t('preferredTime'), theme),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<String>(
-                        value: _selectedTime,
+                        initialValue: _selectedTime,
                         decoration: InputDecoration(
                           prefixIcon: const Icon(Icons.access_time_rounded),
                           border: OutlineInputBorder(

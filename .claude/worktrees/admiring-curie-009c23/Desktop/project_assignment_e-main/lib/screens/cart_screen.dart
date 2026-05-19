@@ -5,6 +5,18 @@ import 'package:project_assignment_e/providers/cart_provider.dart';
 import 'package:project_assignment_e/utils/app_colors.dart';
 import 'package:provider/provider.dart';
 
+// Scaffold wrapper used when navigating via push (e.g. from HomeScreen)
+class CartPage extends StatelessWidget {
+  const CartPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(child: CartScreen()),
+    );
+  }
+}
+
 class CartScreen extends StatelessWidget {
   CartScreen({super.key});
 

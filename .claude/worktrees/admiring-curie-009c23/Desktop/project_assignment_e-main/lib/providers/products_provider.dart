@@ -18,6 +18,8 @@ class ProductProvider extends ChangeNotifier {
   List<Result> get productList =>
       _isFiltered ? _filteredList : _productList;
 
+  Set<String> get favorites => Set.unmodifiable(_favoriteIds);
+
   bool isFavorite(String? id) => id != null && _favoriteIds.contains(id);
 
   double getRating(String? id) => id != null ? (_ratings[id] ?? 0.0) : 0.0;
