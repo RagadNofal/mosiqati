@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/user/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/44d2bf53-564f-48d9-9d31-0fef77a30438/b4b706b7-bc08-4eda-9471-4fb661ade663/skills/docx/**)",
+      "Bash(python scripts/office/unpack.py \"C:\\\\Users\\\\user\\\\Downloads\\\\L2 IT U08 AAB Learning Aim BC-2.docx\" \"C:\\\\Users\\\\user\\\\Downloads\\\\docx_unpacked\")",
+      "Bash(pip install *)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\.claude\\\\worktrees\\\\admiring-curie-009c23\" -Recurse -Name)",
+      "Bash(python -c ' *)",
+      "Bash(python -c \"import sys; sys.stdout.buffer.write\\(sys.stdin.buffer.read\\(\\)\\)\")",
+      "Bash(python -c \"import sys; data=sys.stdin.buffer.read\\(\\); print\\(data.decode\\('utf-8', errors='replace'\\)\\)\")",
+      "Bash(python -c \" *)",
+      "Bash(flutter pub *)",
+      "Bash(flutter analyze *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}
