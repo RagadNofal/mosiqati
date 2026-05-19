@@ -24,7 +24,7 @@ class SettingsScreen extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryLight],
+                colors: [AppColors.wine, AppColors.primaryDark, AppColors.primary],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -128,7 +128,9 @@ class SettingsScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [AppColors.primary, AppColors.primaryLight],
+                          colors: [AppColors.primaryDark, AppColors.primary],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20),
                       ),

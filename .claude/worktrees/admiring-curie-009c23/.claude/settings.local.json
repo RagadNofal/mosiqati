@@ -11,7 +11,9 @@
       "Bash(python -c \" *)",
       "Bash(flutter pub *)",
       "Bash(flutter analyze *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(Get-ChildItem -Recurse -Path \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\.claude\\\\worktrees\\\\admiring-curie-009c23\\\\Desktop\\\\project_assignment_e-main\" -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)"
     ]
   }
 }

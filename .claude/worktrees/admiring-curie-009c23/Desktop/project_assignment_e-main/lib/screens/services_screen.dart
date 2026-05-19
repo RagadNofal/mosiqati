@@ -110,7 +110,7 @@ class _ServicesScreenState extends State<ServicesScreen>
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
           decoration: const BoxDecoration(
             gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.primaryLight],
+              colors: [AppColors.wine, AppColors.primaryDark, AppColors.primary],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

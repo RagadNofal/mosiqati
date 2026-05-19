@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:project_assignment_e/l10n/app_localizations.dart';
 import 'package:project_assignment_e/providers/cart_provider.dart';
 import 'package:project_assignment_e/providers/locale_provider.dart';
+import 'package:project_assignment_e/providers/notifications_provider.dart';
 import 'package:project_assignment_e/providers/products_provider.dart';
 import 'package:project_assignment_e/providers/theme_provider.dart';
 import 'package:project_assignment_e/screens/home_page.dart';
@@ -16,6 +17,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
+        ChangeNotifierProvider(create: (_) => NotificationsProvider()),
       ],
       child: const MosiqatiApp(),
     ),

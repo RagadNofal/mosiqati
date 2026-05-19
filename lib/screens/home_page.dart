@@ -2,10 +2,14 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:project_assignment_e/providers/cart_provider.dart';
+import 'package:project_assignment_e/providers/locale_provider.dart';
+import 'package:project_assignment_e/providers/notifications_provider.dart';
 import 'package:project_assignment_e/providers/products_provider.dart';
 import 'package:project_assignment_e/providers/theme_provider.dart';
 import 'package:project_assignment_e/screens/cart_screen.dart';
 import 'package:project_assignment_e/screens/details_screen.dart';
+import 'package:project_assignment_e/screens/favorites_screen.dart';
+import 'package:project_assignment_e/screens/notifications_screen.dart';
 import 'package:project_assignment_e/screens/profile_screen.dart';
 import 'package:project_assignment_e/screens/services_screen.dart';
 import 'package:provider/provider.dart';
@@ -63,7 +67,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   int    _heroIdx       = 0;
   String _selectedCat   = '';
   bool   _searchFocused = false;
-  int    _notifCount    = 3; // demo notification count
   final Set<String> _addingToCart = {}; // product ids mid-animation
 
   // ── Hero data ───────────────────────────────────────────
@@ -285,9 +288,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ──────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final isDark    = context.watch<ThemeProvider>().isDark;
-    final cartCount = context.watch<CartProvider>().itemCount;
-    final api       = context.watch<ProductProvider>().apidatastatus;
+    final isDark     = context.watch<ThemeProvider>().isDark;
+    final cartCount  = context.watch<CartProvider>().itemCount;
+    final api        = context.watch<ProductProvider>().apidatastatus;
+    final notifCount = context.watch<NotificationsProvider>().unreadCount;
+    final isArabic   = context.watch<LocaleProvider>().isArabic;
 
     final bg      = isDark ? _C.bgDark    : _C.bgLight;
     final surface = isDark ? _C.surfaceD  : _C.surfaceL;
@@ -313,11 +318,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         },
         onCart: () {
           _tap();
-          Navigator.push(context, _slide(CartPage()));
+          Navigator.push(context, _slide(const CartPage()));
         },
         onProfile: () {
           _tap();
           Navigator.push(context, _slide(const ProfileScreen()));
+        },
+        onFavorites: () {
+          _tap();
+          Navigator.push(context, _slide(const FavoritesScreen()));
         },
       ),
       body: SafeArea(
@@ -350,11 +359,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               style: TextStyle(color: subText, fontSize: 13)),
                         ]),
                       ),
+                      // Language toggle
+                      GestureDetector(
+                        onTap: () {
+                          _tap();
+                          context.read<LocaleProvider>().setLocale(
+                            isArabic
+                                ? const Locale('en')
+                                : const Locale('ar'),
+                          );
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 11, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: card,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: _C.raspberry.withValues(alpha: 0.3)),
+                          ),
+                          child: Text(
+                            isArabic ? 'EN' : 'عربي',
+                            style: const TextStyle(
+                              color: _C.raspberry,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // Notification bell
                       GestureDetector(
                         onTap: () {
                           _tap();
-                          if (_notifCount > 0) setState(() => _notifCount = 0);
+                          Navigator.push(
+                              context, _slide(const NotificationsScreen()));
                         },
                         child: Stack(clipBehavior: Clip.none, children: [
                           Container(
@@ -363,32 +403,35 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               color: card,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: _notifCount > 0
+                                  color: notifCount > 0
                                       ? _C.raspberry.withValues(alpha: 0.4)
                                       : Colors.transparent),
                             ),
                             child: AnimatedBuilder(
                               animation: _notifCtrl,
                               builder: (_, child) => Transform.rotate(
-                                angle: _notifCount > 0
+                                angle: notifCount > 0
                                     ? (_notifCtrl.value - 0.92) * 0.6
                                     : 0,
                                 child: child,
                               ),
                               child: Icon(Icons.notifications_outlined,
-                                  color: _notifCount > 0 ? _C.raspberry : text, size: 24),
+                                  color: notifCount > 0 ? _C.raspberry : text,
+                                  size: 24),
                             ),
                           ),
-                          if (_notifCount > 0)
+                          if (notifCount > 0)
                             Positioned(
                               right: -2, top: -2,
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(
-                                    color: _C.raspberry, shape: BoxShape.circle),
-                                child: Text('$_notifCount',
+                                    color: _C.raspberry,
+                                    shape: BoxShape.circle),
+                                child: Text('$notifCount',
                                     style: const TextStyle(
-                                        color: Colors.white, fontSize: 10,
+                                        color: Colors.white,
+                                        fontSize: 10,
                                         fontWeight: FontWeight.bold)),
                               ),
                             ),
@@ -1397,12 +1440,13 @@ class _BottomNav extends StatelessWidget {
   final int cartCount;
   final bool isDark;
   final Color surface, text;
-  final VoidCallback onServices, onCart, onProfile;
+  final VoidCallback onServices, onCart, onProfile, onFavorites;
 
   const _BottomNav({
     required this.cartCount, required this.isDark,
     required this.surface, required this.text,
-    required this.onServices, required this.onCart, required this.onProfile,
+    required this.onServices, required this.onCart,
+    required this.onProfile, required this.onFavorites,
   });
 
   @override
@@ -1410,9 +1454,9 @@ class _BottomNav extends StatelessWidget {
     return SafeArea(
       top: false,
       child: Container(
-        margin: const EdgeInsets.fromLTRB(24, 0, 24, 14),
+        margin: const EdgeInsets.fromLTRB(20, 0, 20, 14),
         height: 65,
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
         decoration: BoxDecoration(
           color: isDark ? _C.surfaceD : Colors.white,
           borderRadius: BorderRadius.circular(36),
@@ -1426,13 +1470,15 @@ class _BottomNav extends StatelessWidget {
           ],
         ),
         child: Row(children: [
-          _NavItem(icon: Icons.home_rounded,        label: 'Home',
-              active: true,  text: text, onTap: () {}),
-          _NavItem(icon: Icons.build_rounded,       label: 'Services',
-              active: false, text: text, onTap: onServices),
+          _NavItem(icon: Icons.home_rounded,
+              label: 'Home',     active: true,  text: text, onTap: () {}),
+          _NavItem(icon: Icons.favorite_rounded,
+              label: 'Faves',    active: false, text: text, onTap: onFavorites),
           _NavItemCart(count: cartCount, text: text, onTap: onCart),
-          _NavItem(icon: Icons.person_rounded,      label: 'Profile',
-              active: false, text: text, onTap: onProfile),
+          _NavItem(icon: Icons.build_rounded,
+              label: 'Services', active: false, text: text, onTap: onServices),
+          _NavItem(icon: Icons.person_rounded,
+              label: 'Profile',  active: false, text: text, onTap: onProfile),
         ]),
       ),
     );
