@@ -5,7 +5,9 @@ import 'package:project_assignment_e/providers/cart_provider.dart';
 import 'package:project_assignment_e/providers/locale_provider.dart';
 import 'package:project_assignment_e/providers/notifications_provider.dart';
 import 'package:project_assignment_e/providers/products_provider.dart';
+import 'package:project_assignment_e/providers/sound_provider.dart';
 import 'package:project_assignment_e/providers/theme_provider.dart';
+import 'package:project_assignment_e/screens/all_products_screen.dart';
 import 'package:project_assignment_e/screens/cart_screen.dart';
 import 'package:project_assignment_e/screens/details_screen.dart';
 import 'package:project_assignment_e/screens/favorites_screen.dart';
@@ -154,6 +156,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _tap()     => HapticFeedback.lightImpact();
   void _success() => HapticFeedback.mediumImpact();
 
+  void _soundTap()     => context.read<SoundProvider>().play(SoundType.click);
+  void _soundSuccess() => context.read<SoundProvider>().play(SoundType.cart);
+
   void _filterBy(String key) {
     _tap();
     setState(() {
@@ -169,6 +174,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _addToCart(dynamic product) async {
     _success();
+    _soundSuccess();
     setState(() => _addingToCart.add(product.id.toString()));
     context.read<CartProvider>().itemAddToCart(product);
     await Future.delayed(const Duration(milliseconds: 600));
@@ -288,11 +294,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ──────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    final isDark     = context.watch<ThemeProvider>().isDark;
-    final cartCount  = context.watch<CartProvider>().itemCount;
-    final api        = context.watch<ProductProvider>().apidatastatus;
-    final notifCount = context.watch<NotificationsProvider>().unreadCount;
-    final isArabic   = context.watch<LocaleProvider>().isArabic;
+    final isDark       = context.watch<ThemeProvider>().isDark;
+    final cartCount    = context.watch<CartProvider>().itemCount;
+    final api          = context.watch<ProductProvider>().apidatastatus;
+    final notifCount   = context.watch<NotificationsProvider>().unreadCount;
+    final isArabic     = context.watch<LocaleProvider>().isArabic;
+    final soundEnabled = context.watch<SoundProvider>().isEnabled;
 
     final bg      = isDark ? _C.bgDark    : _C.bgLight;
     final surface = isDark ? _C.surfaceD  : _C.surfaceL;
@@ -309,23 +316,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         surface: surface,
         text: text,
         onServices: () {
-          _tap();
+          _soundTap();
           Navigator.push(context, _slide(
-            Scaffold(
-              body: SafeArea(child: const ServicesScreen()),
-            ),
+            Scaffold(body: SafeArea(child: const ServicesScreen())),
           ));
         },
         onCart: () {
-          _tap();
+          _soundTap();
           Navigator.push(context, _slide(const CartPage()));
         },
         onProfile: () {
-          _tap();
+          _soundTap();
           Navigator.push(context, _slide(const ProfileScreen()));
         },
         onFavorites: () {
-          _tap();
+          _soundTap();
           Navigator.push(context, _slide(const FavoritesScreen()));
         },
       ),
@@ -359,42 +364,59 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               style: TextStyle(color: subText, fontSize: 13)),
                         ]),
                       ),
-                      // Language toggle
-                      GestureDetector(
+                      // ── Top action buttons ────────────────────────
+                      // Language toggle (AR / EN)
+                      _TopBtn(
+                        bg: card,
                         onTap: () {
-                          _tap();
+                          context.read<SoundProvider>().play(SoundType.language);
                           context.read<LocaleProvider>().setLocale(
-                            isArabic
-                                ? const Locale('en')
-                                : const Locale('ar'),
+                            isArabic ? const Locale('en') : const Locale('ar'),
                           );
                         },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 11, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: card,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                                color: _C.raspberry.withValues(alpha: 0.3)),
-                          ),
-                          child: Text(
-                            isArabic ? 'EN' : 'عربي',
-                            style: const TextStyle(
-                              color: _C.raspberry,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w800,
-                            ),
+                        child: Text(
+                          isArabic ? 'EN' : 'AR',
+                          style: const TextStyle(
+                            color: _C.raspberry,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      // Notification bell
+                      const SizedBox(width: 6),
+
+                      // Theme toggle
+                      _TopBtn(
+                        bg: card,
+                        onTap: () {
+                          context.read<SoundProvider>().play(SoundType.theme);
+                          context.read<ThemeProvider>().toggle();
+                        },
+                        child: Icon(
+                          isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                          color: isDark ? Colors.amber : _C.plum,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+
+                      // Sound toggle
+                      _TopBtn(
+                        bg: card,
+                        onTap: () => context.read<SoundProvider>().toggle(),
+                        child: Icon(
+                          soundEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                          color: soundEnabled ? _C.raspberry : Colors.grey,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+
+                      // Notifications bell
                       GestureDetector(
                         onTap: () {
-                          _tap();
-                          Navigator.push(
-                              context, _slide(const NotificationsScreen()));
+                          context.read<SoundProvider>().play(SoundType.navigation);
+                          Navigator.push(context, _slide(const NotificationsScreen()));
                         },
                         child: Stack(clipBehavior: Clip.none, children: [
                           Container(
@@ -403,9 +425,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               color: card,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                  color: notifCount > 0
-                                      ? _C.raspberry.withValues(alpha: 0.4)
-                                      : Colors.transparent),
+                                color: notifCount > 0
+                                    ? _C.raspberry.withValues(alpha: 0.4)
+                                    : Colors.transparent,
+                              ),
                             ),
                             child: AnimatedBuilder(
                               animation: _notifCtrl,
@@ -415,9 +438,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                     : 0,
                                 child: child,
                               ),
-                              child: Icon(Icons.notifications_outlined,
-                                  color: notifCount > 0 ? _C.raspberry : text,
-                                  size: 24),
+                              child: Icon(
+                                Icons.notifications_outlined,
+                                color: notifCount > 0 ? _C.raspberry : text,
+                                size: 22,
+                              ),
                             ),
                           ),
                           if (notifCount > 0)
@@ -426,26 +451,28 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(
-                                    color: _C.raspberry,
-                                    shape: BoxShape.circle),
+                                  color: _C.raspberry,
+                                  shape: BoxShape.circle,
+                                ),
                                 child: Text('$notifCount',
                                     style: const TextStyle(
                                         color: Colors.white,
-                                        fontSize: 10,
+                                        fontSize: 9,
                                         fontWeight: FontWeight.bold)),
                               ),
                             ),
                         ]),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 8),
+
                       // Profile avatar
                       GestureDetector(
                         onTap: () {
-                          _tap();
+                          context.read<SoundProvider>().play(SoundType.navigation);
                           Navigator.push(context, _slide(const ProfileScreen()));
                         },
                         child: Container(
-                          width: 46, height: 46,
+                          width: 44, height: 44,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             gradient: const LinearGradient(
@@ -454,12 +481,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               end: Alignment.bottomRight,
                             ),
                             boxShadow: [
-                              BoxShadow(color: _C.raspberry.withValues(alpha: 0.35),
-                                  blurRadius: 10, offset: const Offset(0, 4)),
+                              BoxShadow(
+                                color: _C.raspberry.withValues(alpha: 0.35),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
                             ],
                           ),
                           child: const Icon(Icons.person_outline,
-                              color: Colors.white, size: 24),
+                              color: Colors.white, size: 22),
                         ),
                       ),
                     ]),
@@ -639,6 +669,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       title: 'Categories',
                       action: 'View all',
                       text: text,
+                      onAction: () => Navigator.push(context, _slide(const AllProductsScreen())),
                     ),
                   ),
                 ),
@@ -715,6 +746,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       title: 'Most Popular',
                       action: 'See all',
                       text: text,
+                      onAction: () => Navigator.push(context, _slide(const AllProductsScreen())),
                     ),
                   ),
                 ),
@@ -785,68 +817,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                             child: const Icon(Icons.arrow_forward_rounded,
                                 color: Colors.white, size: 20),
-                          ),
-                        ]),
-                      ),
-                    ),
-                  ),
-                ),
-
-                // ─────────────────────────────────────────────
-                //  8. DARK MODE TOGGLE
-                // ─────────────────────────────────────────────
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-                    child: GestureDetector(
-                      onTap: () => context.read<ThemeProvider>().toggle(),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 18, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: surface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: _C.raspberry.withValues(alpha: 0.2)),
-                        ),
-                        child: Row(children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: isDark
-                                  ? _C.plum.withValues(alpha: 0.3)
-                                  : const Color(0xFFEAF2EF),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              isDark
-                                  ? Icons.dark_mode_rounded
-                                  : Icons.light_mode_rounded,
-                              color: isDark ? Colors.amber : _C.sage,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(isDark ? 'Dark Mode' : 'Light Mode',
-                                  style: TextStyle(
-                                      color: text,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600)),
-                              Text('Tap to switch appearance',
-                                  style: TextStyle(
-                                      color: subText, fontSize: 12)),
-                            ],
-                          )),
-                          Switch.adaptive(
-                            value: isDark,
-                            activeThumbColor: Colors.white,
-                            activeTrackColor: _C.raspberry,
-                            onChanged: (_) =>
-                                context.read<ThemeProvider>().toggle(),
                           ),
                         ]),
                       ),
@@ -1405,13 +1375,46 @@ class _SkeletonCardState extends State<_SkeletonCard>
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
+//  Top icon button helper
+// ──────────────────────────────────────────────────────────────────────────────
+class _TopBtn extends StatelessWidget {
+  final Color bg;
+  final VoidCallback onTap;
+  final Widget child;
+
+  const _TopBtn({required this.bg, required this.onTap, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(9),
+        decoration: BoxDecoration(
+          color: bg,
+          shape: BoxShape.circle,
+          border: Border.all(color: _C.raspberry.withValues(alpha: 0.25)),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
 //  Section Header
 // ──────────────────────────────────────────────────────────────────────────────
 class _SectionHeader extends StatelessWidget {
   final String title, action;
   final Color text;
-  const _SectionHeader({required this.title, required this.action,
-    required this.text});
+  final VoidCallback? onAction;
+
+  const _SectionHeader({
+    required this.title,
+    required this.action,
+    required this.text,
+    this.onAction,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1422,7 +1425,10 @@ class _SectionHeader extends StatelessWidget {
                 fontWeight: FontWeight.bold)),
       ),
       GestureDetector(
-        onTap: () => HapticFeedback.selectionClick(),
+        onTap: () {
+          HapticFeedback.selectionClick();
+          onAction?.call();
+        },
         child: Row(children: [
           Text(action, style: const TextStyle(color: _C.rose, fontSize: 14)),
           const SizedBox(width: 4),

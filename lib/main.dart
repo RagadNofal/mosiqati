@@ -5,6 +5,7 @@ import 'package:project_assignment_e/providers/cart_provider.dart';
 import 'package:project_assignment_e/providers/locale_provider.dart';
 import 'package:project_assignment_e/providers/notifications_provider.dart';
 import 'package:project_assignment_e/providers/products_provider.dart';
+import 'package:project_assignment_e/providers/sound_provider.dart';
 import 'package:project_assignment_e/providers/theme_provider.dart';
 import 'package:project_assignment_e/screens/home_page.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +19,7 @@ void main() {
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => LocaleProvider()),
         ChangeNotifierProvider(create: (_) => NotificationsProvider()),
+        ChangeNotifierProvider(create: (_) => SoundProvider()),
       ],
       child: const MosiqatiApp(),
     ),
@@ -29,25 +31,19 @@ class MosiqatiApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = context.watch<ThemeProvider>();
+    final themeProvider  = context.watch<ThemeProvider>();
     final localeProvider = context.watch<LocaleProvider>();
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'MOSIQATI | موسيقاتي',
 
-      // Theme
-      theme: themeProvider.lightTheme,
-      darkTheme: themeProvider.darkTheme,
-      themeMode:
-          themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
+      theme:      themeProvider.lightTheme,
+      darkTheme:  themeProvider.darkTheme,
+      themeMode:  themeProvider.isDark ? ThemeMode.dark : ThemeMode.light,
 
-      // Locale
       locale: localeProvider.locale,
-      supportedLocales: const [
-        Locale('en'),
-        Locale('ar'),
-      ],
+      supportedLocales: const [Locale('en'), Locale('ar')],
       localizationsDelegates: const [
         AppLocalizationsDelegate(),
         GlobalMaterialLocalizations.delegate,

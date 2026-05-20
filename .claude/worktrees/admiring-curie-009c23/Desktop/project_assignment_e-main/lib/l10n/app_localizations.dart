@@ -138,6 +138,9 @@ class AppLocalizations {
       'free': 'Free',
       'promoCode': 'Promo code',
       'apply': 'Apply',
+      'sound': 'Sound Effects',
+      'soundOn': 'Sound On',
+      'soundOff': 'Sound Off',
     },
     'ar': {
       'appName': 'موسيقاتي',
@@ -268,6 +271,9 @@ class AppLocalizations {
       'free': 'مجاني',
       'promoCode': 'كود خصم',
       'apply': 'تطبيق',
+      'sound': 'المؤثرات الصوتية',
+      'soundOn': 'الصوت مفعّل',
+      'soundOff': 'الصوت معطّل',
     },
   };
 

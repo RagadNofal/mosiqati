@@ -4,6 +4,7 @@ import 'package:project_assignment_e/l10n/app_localizations.dart';
 import 'package:project_assignment_e/providers/cart_provider.dart';
 import 'package:project_assignment_e/providers/locale_provider.dart';
 import 'package:project_assignment_e/providers/products_provider.dart';
+import 'package:project_assignment_e/providers/sound_provider.dart';
 import 'package:project_assignment_e/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -60,6 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     final favCount      = context.watch<ProductProvider>().favorites.length;
     final cartCount     = context.watch<CartProvider>().itemCount;
     final localeProvider= context.watch<LocaleProvider>();
+    final soundProvider = context.watch<SoundProvider>();
 
     final bg     = isDark ? _C.bgDark    : _C.bgLight;
     final cardBg = isDark ? _C.cardD     : Colors.white;
@@ -133,6 +135,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                         isDark: isDark,
                         localeProvider: localeProvider,
                         themeProvider: context.read<ThemeProvider>(),
+                        soundProvider: soundProvider,
                       ),
                       const SizedBox(height: 24),
 
@@ -490,6 +493,7 @@ class _QuickLinks extends StatelessWidget {
   final bool isDark;
   final LocaleProvider localeProvider;
   final ThemeProvider themeProvider;
+  final SoundProvider soundProvider;
 
   const _QuickLinks({
     required this.l,
@@ -497,6 +501,7 @@ class _QuickLinks extends StatelessWidget {
     required this.isDark,
     required this.localeProvider,
     required this.themeProvider,
+    required this.soundProvider,
   });
 
   @override
@@ -563,25 +568,35 @@ class _QuickLinks extends StatelessWidget {
           ),
           _divider(),
           _LinkTile(
-            icon: isDark
-                ? Icons.dark_mode_rounded
-                : Icons.light_mode_rounded,
+            icon: isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
             color: isDark ? _C.rose : Colors.amber,
             label: l.t('theme'),
             trailing: Switch(
               value: isDark,
               onChanged: (_) {
-                HapticFeedback.lightImpact();
                 themeProvider.toggle();
               },
               activeThumbColor: Colors.white,
               activeTrackColor: _C.raspberry,
             ),
             isDark: isDark,
-            onTap: () {
-              HapticFeedback.lightImpact();
-              themeProvider.toggle();
-            },
+            onTap: () => themeProvider.toggle(),
+          ),
+          _divider(),
+          _LinkTile(
+            icon: soundProvider.isEnabled
+                ? Icons.volume_up_rounded
+                : Icons.volume_off_rounded,
+            color: soundProvider.isEnabled ? _C.sage : Colors.grey,
+            label: l.t('sound'),
+            trailing: Switch(
+              value: soundProvider.isEnabled,
+              onChanged: (_) => soundProvider.toggle(),
+              activeThumbColor: Colors.white,
+              activeTrackColor: _C.sage,
+            ),
+            isDark: isDark,
+            onTap: () => soundProvider.toggle(),
           ),
         ],
       ),
