@@ -90,6 +90,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   @override
   Widget build(BuildContext context) {
     final l          = AppLocalizations.of(context);
+    final lang       = Localizations.localeOf(context).languageCode;
     final p          = widget.result;
     final prodProv   = context.watch<ProductProvider>();
     final cartProv   = context.watch<CartProvider>();
@@ -116,7 +117,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                   ),
                   Expanded(
                     child: Text(
-                      p?.brand ?? '',
+                      p?.displayBrand(lang) ?? '',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 14,
@@ -281,7 +282,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                       ? Icons.image_rounded
                       : Icons.play_circle_fill_rounded),
                   label: Text(
-                    _showVideo ? 'Show Image' : l.t('watchVideo'),
+                    _showVideo ? l.t('showImage') : l.t('watchVideo'),
                     style: const TextStyle(fontSize: 13),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -342,7 +343,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    p?.model ?? '',
+                                    p?.displayModel(lang) ?? '',
                                     style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.w800,
@@ -350,7 +351,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
-                                    p?.brand ?? '',
+                                    p?.displayBrand(lang) ?? '',
                                     style: TextStyle(
                                       fontSize: 14,
                                       color: Theme.of(context)
@@ -423,7 +424,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                               fontSize: 16, fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 10),
-                        _SpecsGrid(product: p, l: l, color: _accent),
+                        _SpecsGrid(product: p, l: l, color: _accent, lang: lang),
 
                         // Description
                         if (p?.description != null) ...[
@@ -435,7 +436,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                   fontSize: 16, fontWeight: FontWeight.w700)),
                           const SizedBox(height: 8),
                           Text(
-                            p!.description!,
+                            p!.displayDescription(lang),
                             style: TextStyle(
                               fontSize: 14,
                               color: Theme.of(context)
@@ -575,15 +576,16 @@ class _SpecsGrid extends StatelessWidget {
   final Result? product;
   final AppLocalizations l;
   final Color color;
+  final String lang;
 
   const _SpecsGrid(
-      {required this.product, required this.l, required this.color});
+      {required this.product, required this.l, required this.color, required this.lang});
 
   @override
   Widget build(BuildContext context) {
     final specs = [
-      (l.t('brand'),    product?.brand ?? '-',  Icons.business_rounded),
-      (l.t('color'),    product?.colour ?? '-', Icons.palette_rounded),
+      (l.t('brand'),    product?.displayBrand(lang) ?? '-',  Icons.business_rounded),
+      (l.t('color'),    product?.displayColour(lang) ?? '-', Icons.palette_rounded),
       (l.t('weight'),   product?.weight ?? '-', Icons.monitor_weight_rounded),
       (l.t('quantity'), '${product?.quantity ?? 0}', Icons.inventory_2_rounded),
     ];

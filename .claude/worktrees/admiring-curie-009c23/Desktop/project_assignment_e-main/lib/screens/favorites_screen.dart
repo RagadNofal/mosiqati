@@ -268,6 +268,8 @@ class _FavCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang  = Localizations.localeOf(context).languageCode;
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -314,7 +316,8 @@ class _FavCard extends StatelessWidget {
                   // Unfav button
                   Positioned(
                     top: 8,
-                    right: 8,
+                    right: isRTL ? null : 8,
+                    left:  isRTL ? 8 : null,
                     child: GestureDetector(
                       onTap: onUnfav,
                       child: Container(
@@ -339,7 +342,8 @@ class _FavCard extends StatelessWidget {
                   if (product.category != null)
                     Positioned(
                       top: 8,
-                      left: 8,
+                      left:  isRTL ? null : 8,
+                      right: isRTL ? 8 : null,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 3),
@@ -348,7 +352,7 @@ class _FavCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
-                          product.category!.toUpperCase(),
+                          product.displayCategory(lang),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 9,
@@ -369,7 +373,7 @@ class _FavCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    product.model ?? product.name ?? '',
+                    product.displayModel(lang),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -380,7 +384,7 @@ class _FavCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    product.brand ?? '',
+                    product.displayBrand(lang),
                     style: TextStyle(color: subCol, fontSize: 11),
                   ),
                   const SizedBox(height: 8),

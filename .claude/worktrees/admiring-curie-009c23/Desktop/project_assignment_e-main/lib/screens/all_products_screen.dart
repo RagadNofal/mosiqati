@@ -460,7 +460,7 @@ class _GridProductCard extends StatelessWidget {
             child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-              Text(product.model?.toString() ?? '',
+              Text(product.displayModel(Localizations.localeOf(context).languageCode),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -468,7 +468,7 @@ class _GridProductCard extends StatelessWidget {
                       fontSize: 13,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: 2),
-              Text(product.brand?.toString() ?? '',
+              Text(product.displayBrand(Localizations.localeOf(context).languageCode),
                   style: TextStyle(color: subText, fontSize: 11)),
               const SizedBox(height: 6),
               Row(children: [

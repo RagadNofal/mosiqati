@@ -141,6 +141,12 @@ class AppLocalizations {
       'sound': 'Sound Effects',
       'soundOn': 'Sound On',
       'soundOff': 'Sound Off',
+      'viewAll': 'View All',
+      'seeAll': 'See All',
+      'showImage': 'Show Image',
+      'cancel': 'Cancel',
+      'tapToRate': 'Tap a star to rate',
+      'servicesSubtitle': 'Maintenance • Consultations • Repairs',
     },
     'ar': {
       'appName': 'موسيقاتي',
@@ -274,6 +280,12 @@ class AppLocalizations {
       'sound': 'المؤثرات الصوتية',
       'soundOn': 'الصوت مفعّل',
       'soundOff': 'الصوت معطّل',
+      'viewAll': 'عرض الكل',
+      'seeAll': 'عرض الكل',
+      'showImage': 'عرض الصورة',
+      'cancel': 'إلغاء',
+      'tapToRate': 'اضغط نجمة للتقييم',
+      'servicesSubtitle': 'صيانة • استشارات • إصلاحات',
     },
   };
 

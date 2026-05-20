@@ -191,6 +191,8 @@ class _CartItemCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang  = Localizations.localeOf(context).languageCode;
+    final isRTL = Directionality.of(context) == TextDirection.rtl;
     return Container(
       height: 105,
       decoration: BoxDecoration(
@@ -212,9 +214,11 @@ class _CartItemCard extends StatelessWidget {
         children: [
           // Image
           ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(20),
-              bottomLeft: Radius.circular(20),
+            borderRadius: BorderRadius.only(
+              topLeft:     Radius.circular(isRTL ? 0 : 20),
+              bottomLeft:  Radius.circular(isRTL ? 0 : 20),
+              topRight:    Radius.circular(isRTL ? 20 : 0),
+              bottomRight: Radius.circular(isRTL ? 20 : 0),
             ),
             child: SizedBox(
               width: 95,
@@ -238,7 +242,7 @@ class _CartItemCard extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    item.model ?? '',
+                    item.displayModel(lang),
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 15,
@@ -249,7 +253,7 @@ class _CartItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    item.brand ?? '',
+                    item.displayBrand(lang),
                     style: const TextStyle(
                         color: Colors.white70, fontSize: 12),
                   ),
@@ -260,7 +264,7 @@ class _CartItemCard extends StatelessWidget {
                           color: Colors.white38, size: 12),
                       const SizedBox(width: 4),
                       Text(
-                        (item.category ?? '').toString().toUpperCase(),
+                        item.displayCategory(lang),
                         style: const TextStyle(
                             color: Colors.white54,
                             fontSize: 10,

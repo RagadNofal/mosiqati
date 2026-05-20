@@ -15,6 +15,7 @@ import 'package:project_assignment_e/screens/notifications_screen.dart';
 import 'package:project_assignment_e/screens/profile_screen.dart';
 import 'package:project_assignment_e/screens/services_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:project_assignment_e/l10n/app_localizations.dart';
 
 // ──────────────────────────────────────────────────────────────────────────────
 //  Colour Palette  (Raspberry × Plum × Wine × Mint × Gold)
@@ -71,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool   _searchFocused = false;
   final Set<String> _addingToCart = {}; // product ids mid-animation
 
-  // ── Hero data ───────────────────────────────────────────
+  // ── Hero data (English) ─────────────────────────────────
   static const _heroes = [
     {
       'tag'   : 'MUSIC EXPERIENCE',
@@ -92,6 +93,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       'title1': 'Play your\nown ',
       'title2': 'story',
       'sub'   : 'Explore guitars, oud, piano & more.',
+      'img'   : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=900',
+    },
+  ];
+
+  // ── Hero data (Arabic) ──────────────────────────────────
+  static const _heroesAr = [
+    {
+      'tag'   : 'تجربة موسيقية',
+      'title1': 'اعثر على\n',
+      'title2': 'صوتك المثالي',
+      'sub'   : 'آلات مصنوعة بعناية. روح حقيقية.',
+      'img'   : 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?w=900',
+    },
+    {
+      'tag'   : 'مجموعة مميزة',
+      'title1': 'أحسّ بسحر\n',
+      'title2': 'الموسيقى',
+      'sub'   : 'اختر آلات تناسب مزاجك وروحك.',
+      'img'   : 'https://images.unsplash.com/photo-1520523839897-bd0b52f945a0?w=900',
+    },
+    {
+      'tag'   : 'وصل حديثاً',
+      'title1': 'العب\n',
+      'title2': 'قصتك الخاصة',
+      'sub'   : 'استكشف العود، الغيتار، البيانو والمزيد.',
       'img'   : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=900',
     },
   ];
@@ -184,6 +210,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // ── Rating dialog ────────────────────────────────────────
   void _ratingDialog(dynamic product) {
     final prov = context.read<ProductProvider>();
+    final l    = AppLocalizations.of(context);
+    final lang = Localizations.localeOf(context).languageCode;
     double tmp  = prov.getRating(product.id);
     final isDark = context.read<ThemeProvider>().isDark;
 
@@ -207,14 +235,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(2),
                 )),
             const SizedBox(height: 20),
-            Text('Rate this instrument',
+            Text(l.t('rateProduct'),
                 style: TextStyle(
                   color: isDark ? Colors.white : _C.wine,
                   fontSize: 20, fontWeight: FontWeight.bold,
                 )),
             const SizedBox(height: 6),
-            Text(product.model?.toString() ?? '',
-                style: TextStyle(color: _C.raspberry, fontSize: 15)),
+            Text(product.displayModel(lang),
+                style: const TextStyle(color: _C.raspberry, fontSize: 15)),
             const SizedBox(height: 24),
             // Stars
             Row(mainAxisAlignment: MainAxisAlignment.center,
@@ -237,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             const SizedBox(height: 12),
             Text(
-              tmp == 0 ? 'Tap a star to rate' : '${tmp.toInt()} out of 5 stars',
+              tmp == 0 ? l.t('tapToRate') : '${tmp.toInt()} / 5',
               style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
             ),
             const SizedBox(height: 24),
@@ -250,7 +278,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     shape: const StadiumBorder(),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('Cancel', style: TextStyle(color: _C.raspberry)),
+                  child: Text(l.t('cancel'), style: const TextStyle(color: _C.raspberry)),
                 ),
               ),
               const SizedBox(width: 12),
@@ -279,7 +307,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     shape: const StadiumBorder(),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                   ),
-                  child: const Text('Submit', style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text(l.t('submit'), style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ),
             ]),
@@ -300,6 +328,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final notifCount   = context.watch<NotificationsProvider>().unreadCount;
     final isArabic     = context.watch<LocaleProvider>().isArabic;
     final soundEnabled = context.watch<SoundProvider>().isEnabled;
+    final lang         = isArabic ? 'ar' : 'en';
+    final isRTL        = isArabic;
+    final heroData     = isArabic ? _heroesAr : _heroes;
+    final l            = AppLocalizations.of(context);
 
     final bg      = isDark ? _C.bgDark    : _C.bgLight;
     final surface = isDark ? _C.surfaceD  : _C.surfaceL;
@@ -360,7 +392,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             TextSpan(text: 'ATI',
                                 style: TextStyle(color: text, fontSize: 32, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
                           ])),
-                          Text('Your Music, Our Passion',
+                          Text(l.t('tagline'),
                               style: TextStyle(color: subText, fontSize: 13)),
                         ]),
                       ),
@@ -507,11 +539,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         height: 185,
                         child: PageView.builder(
                           controller: _heroPageCtrl,
-                          itemCount: _heroes.length,
+                          itemCount: heroData.length,
                           onPageChanged: (i) => setState(() => _heroIdx = i),
                           itemBuilder: (ctx, i) => _HeroCard(
-                            item: _heroes[i],
+                            item: heroData[i],
                             isActive: _heroIdx == i,
+                            isRTL: isRTL,
                             bg: bg,
                             card: card,
                             text: text,
@@ -522,7 +555,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       const SizedBox(height: 12),
                       // Dot indicators
                       Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                        ...List.generate(_heroes.length, (i) => AnimatedContainer(
+                        ...List.generate(heroData.length, (i) => AnimatedContainer(
                           duration: const Duration(milliseconds: 300),
                           margin: const EdgeInsets.symmetric(horizontal: 4),
                           width: _heroIdx == i ? 24 : 8,
@@ -632,7 +665,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           },
                           style: TextStyle(color: text, fontSize: 15),
                           decoration: InputDecoration(
-                            hintText: 'Search instruments, brands...',
+                            hintText: l.t('search'),
                             hintStyle: TextStyle(
                                 color: text.withValues(alpha: 0.4), fontSize: 15),
                             prefixIcon: Icon(Icons.search_rounded,
@@ -666,8 +699,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 22, 20, 0),
                     child: _SectionHeader(
-                      title: 'Categories',
-                      action: 'View all',
+                      title: l.t('byCategory'),
+                      action: l.t('viewAll'),
                       text: text,
                       onAction: () => Navigator.push(context, _slide(const AllProductsScreen())),
                     ),
@@ -718,7 +751,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   Text(cat['emoji'] as String,
                                       style: const TextStyle(fontSize: 28)),
                                   const SizedBox(height: 5),
-                                  Text(cat['label'] as String,
+                                  Text(l.t(catKey),
                                       style: TextStyle(
                                         color: active
                                             ? Colors.white
@@ -743,8 +776,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
                     child: _SectionHeader(
-                      title: 'Most Popular',
-                      action: 'See all',
+                      title: l.t('mostPopular'),
+                      action: l.t('seeAll'),
                       text: text,
                       onAction: () => Navigator.push(context, _slide(const AllProductsScreen())),
                     ),
@@ -754,7 +787,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.only(top: 14),
-                    child: _buildProducts(api, surface, card, text, subText, isDark),
+                    child: _buildProducts(api, surface, card, text, subText, isDark, lang),
                   ),
                 ),
 
@@ -796,17 +829,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 color: Colors.white, size: 36),
                           ),
                           const SizedBox(width: 16),
-                          const Expanded(child: Column(
+                          Expanded(child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Our Services',
-                                  style: TextStyle(color: Colors.white,
+                              Text(l.t('ourServices'),
+                                  style: const TextStyle(color: Colors.white,
                                       fontSize: 20, fontWeight: FontWeight.bold)),
-                              SizedBox(height: 5),
-                              Text('Maintenance • Consultations • Repairs',
+                              const SizedBox(height: 5),
+                              Text(l.t('servicesSubtitle'),
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+                                  style: const TextStyle(color: Colors.white70, fontSize: 13)),
                             ],
                           )),
                           Container(
@@ -815,7 +848,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.arrow_forward_rounded,
+                            child: Icon(isRTL ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
                                 color: Colors.white, size: 20),
                           ),
                         ]),
@@ -838,7 +871,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // ── Products section ─────────────────────────────────────
   Widget _buildProducts(ApiStatus api, Color surface, Color card, Color text,
-      Color subText, bool isDark) {
+      Color subText, bool isDark, String lang) {
     if (api == ApiStatus.loading) {
       return SizedBox(
         height: 280,
@@ -927,8 +960,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     isAdding: isAdding,
                     isNew: isNew,
                     hasVideo: hasVideo,
+                    lang: lang,
                     onFav: () {
-                      _tap();
+                      context.read<SoundProvider>().play(SoundType.favorite);
                       context.read<ProductProvider>().toggleFavorite(product.id);
                     },
                     onAddToCart: () => _addToCart(product),
@@ -962,17 +996,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 class _HeroCard extends StatelessWidget {
   final Map<String, String> item;
   final bool isActive;
+  final bool isRTL;
   final Color bg, card, text;
   final AnimationController pulseCtrl;
 
   const _HeroCard({
-    required this.item, required this.isActive,
-    required this.bg, required this.card, required this.text,
+    required this.item,
+    required this.isActive,
+    required this.isRTL,
+    required this.bg,
+    required this.card,
+    required this.text,
     required this.pulseCtrl,
   });
 
   @override
   Widget build(BuildContext context) {
+    // Gradient flows from text side → image side
+    final gradBegin = isRTL ? Alignment.centerRight : Alignment.centerLeft;
+    final gradEnd   = isRTL ? Alignment.centerLeft  : Alignment.centerRight;
+
     return AnimatedScale(
       scale: isActive ? 1.0 : 0.94,
       duration: const Duration(milliseconds: 400),
@@ -992,8 +1035,11 @@ class _HeroCard extends StatelessWidget {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(28),
           child: Stack(children: [
-            // Background image
-            Positioned(right: -20, bottom: 0, top: 0,
+            // Background image — opposite side to text
+            Positioned(
+              right: isRTL ? null : -20,
+              left:  isRTL ? -20  : null,
+              bottom: 0, top: 0,
               child: Image.network(
                 item['img']!,
                 width: 250,
@@ -1003,18 +1049,18 @@ class _HeroCard extends StatelessWidget {
                         color: _C.raspberry.withValues(alpha: 0.3)),
               ),
             ),
-            // Gradient overlay (left-to-right)
+            // Gradient overlay — fades from text side to transparent
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [bg, bg.withValues(alpha: 0.7), Colors.transparent],
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
+                  begin: gradBegin,
+                  end: gradEnd,
                   stops: const [0.0, 0.55, 1.0],
                 ),
               ),
             ),
-            // Content
+            // Content — CrossAxisAlignment.start is direction-aware
             Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -1039,6 +1085,7 @@ class _HeroCard extends StatelessWidget {
                   const SizedBox(height: 14),
                   // Title
                   RichText(
+                    textDirection: isRTL ? TextDirection.rtl : TextDirection.ltr,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     text: TextSpan(children: [
@@ -1059,8 +1106,11 @@ class _HeroCard extends StatelessWidget {
                 ],
               ),
             ),
-            // Pulse play button
-            Positioned(right: 20, bottom: 20,
+            // Pulse play button — on the image side
+            Positioned(
+              right: isRTL ? null : 20,
+              left:  isRTL ? 20   : null,
+              bottom: 20,
               child: ScaleTransition(
                 scale: pulseCtrl,
                 child: Container(
@@ -1097,14 +1147,15 @@ class _ProductCard extends StatelessWidget {
   final Color surface, card, text, subText;
   final bool isFav, isAdding, isNew, hasVideo;
   final double rating;
+  final String lang;
   final VoidCallback onFav, onAddToCart, onRate;
 
   const _ProductCard({
     required this.product, required this.surface, required this.card,
     required this.text, required this.subText, required this.isFav,
     required this.rating, required this.isAdding, required this.isNew,
-    required this.hasVideo, required this.onFav, required this.onAddToCart,
-    required this.onRate,
+    required this.hasVideo, required this.lang,
+    required this.onFav, required this.onAddToCart, required this.onRate,
   });
 
   @override
@@ -1248,7 +1299,7 @@ class _ProductCard extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(product.model?.toString() ?? '',
+            Text(product.displayModel(lang),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -1256,7 +1307,7 @@ class _ProductCard extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.bold)),
             const SizedBox(height: 2),
-            Text(product.brand?.toString() ?? '',
+            Text(product.displayBrand(lang),
                 style: TextStyle(color: subText, fontSize: 11)),
             const SizedBox(height: 8),
             Row(children: [
@@ -1475,17 +1526,20 @@ class _BottomNav extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(children: [
-          _NavItem(icon: Icons.home_rounded,
-              label: 'Home',     active: true,  text: text, onTap: () {}),
-          _NavItem(icon: Icons.favorite_rounded,
-              label: 'Faves',    active: false, text: text, onTap: onFavorites),
-          _NavItemCart(count: cartCount, text: text, onTap: onCart),
-          _NavItem(icon: Icons.build_rounded,
-              label: 'Services', active: false, text: text, onTap: onServices),
-          _NavItem(icon: Icons.person_rounded,
-              label: 'Profile',  active: false, text: text, onTap: onProfile),
-        ]),
+        child: Builder(builder: (ctx) {
+          final l = AppLocalizations.of(ctx);
+          return Row(children: [
+            _NavItem(icon: Icons.home_rounded,
+                label: l.t('home'),      active: true,  text: text, onTap: () {}),
+            _NavItem(icon: Icons.favorite_rounded,
+                label: l.t('favorites'), active: false, text: text, onTap: onFavorites),
+            _NavItemCart(count: cartCount, text: text, onTap: onCart),
+            _NavItem(icon: Icons.build_rounded,
+                label: l.t('services'),  active: false, text: text, onTap: onServices),
+            _NavItem(icon: Icons.person_rounded,
+                label: l.t('profile'),   active: false, text: text, onTap: onProfile),
+          ]);
+        }),
       ),
     );
   }
@@ -1568,7 +1622,7 @@ class _NavItemCart extends StatelessWidget {
                 ),
             ]),
             const SizedBox(height: 3),
-            Text('Cart', maxLines: 1,
+            Text(AppLocalizations.of(context).t('cart'), maxLines: 1,
                 style: TextStyle(
                     color: text.withValues(alpha: 0.4),
                     fontSize: 10, fontWeight: FontWeight.w600)),
