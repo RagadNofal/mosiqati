@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -c \"from database import initialize_database; initialize_database\\(\\); print\\('DB OK'\\)\")",
+      "Skill(anthropic-skills:docx)",
+      "Skill(anthropic-skills:docx:*)"
+    ]
+  }
+}

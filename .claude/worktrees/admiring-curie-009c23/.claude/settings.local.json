@@ -13,7 +13,11 @@
       "Bash(flutter analyze *)",
       "Bash(git commit -m ' *)",
       "Bash(Get-ChildItem -Recurse -Path \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\.claude\\\\worktrees\\\\admiring-curie-009c23\\\\Desktop\\\\project_assignment_e-main\" -Directory)",
-      "Bash(Select-Object -ExpandProperty FullName)"
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Skill(anthropic-skills:docx)",
+      "Skill(anthropic-skills:docx:*)",
+      "Bash(python scripts/office/unpack.py \"C:\\\\Users\\\\user\\\\Downloads\\\\L2 IT U08 AAB Learning Aim BC-2.docx\" unpacked_assignment/)",
+      "Bash(pandoc unpacked_assignment/word/document.xml -f docx -t markdown)"
     ]
   }
 }
