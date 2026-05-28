@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "793830090159",
+    "project_id": "musiqati-b0284",
+    "storage_bucket": "musiqati-b0284.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:793830090159:android:4cb68e0e07b16907cbbb5a",
+        "android_client_info": {
+          "package_name": "com.musiqati.store"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC0qrSJDL3IVQ4fbxhhU2YLsLrp-ld_eEQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

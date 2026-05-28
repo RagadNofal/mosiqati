@@ -17,7 +17,21 @@
       "Skill(anthropic-skills:docx)",
       "Skill(anthropic-skills:docx:*)",
       "Bash(python scripts/office/unpack.py \"C:\\\\Users\\\\user\\\\Downloads\\\\L2 IT U08 AAB Learning Aim BC-2.docx\" unpacked_assignment/)",
-      "Bash(pandoc unpacked_assignment/word/document.xml -f docx -t markdown)"
+      "Bash(pandoc unpacked_assignment/word/document.xml -f docx -t markdown)",
+      "Bash(flutter --version)",
+      "Bash(java -version)",
+      "Bash(Get-Content \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\android\\\\local.properties\")",
+      "Bash(Get-Content \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\android\\\\gradle\\\\wrapper\\\\gradle-wrapper.properties\")",
+      "Bash(echo \"org.gradle.jvmargs=-Xmx4G -XX:MaxMetaspaceSize=512m *)",
+      "Bash(cat \"C:\\\\flutter\\\\packages\\\\flutter_tools\\\\gradle\\\\app_plugin_loader.gradle\" 2>/dev/null | head -20)",
+      "Bash(grep -v \"\\\\.gradle$\")",
+      "Bash(flutter build *)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\lib\\\\screens\\\\auth\" \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\lib\\\\screens\\\\admin\" 2>/dev/null; echo \"done\")",
+      "Bash(dir /s /b \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\lib\\\\*.dart\")",
+      "Bash(findstr /v \"build\\\\\\\\\")",
+      "Bash(dir /s /b \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\lib\\\\providers\\\\auth_provider.dart\")",
+      "Bash(dir /s /b \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\lib\\\\providers\\\\*.dart\")",
+      "Bash(python3 -c ' *)"
     ]
   }
 }
