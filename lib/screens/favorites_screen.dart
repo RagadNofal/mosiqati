@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:project_assignment_e/l10n/app_localizations.dart';
 import 'package:project_assignment_e/providers/cart_provider.dart';
 import 'package:project_assignment_e/providers/products_provider.dart';
+import 'package:project_assignment_e/providers/sound_provider.dart';
 import 'package:project_assignment_e/providers/theme_provider.dart';
 import 'package:project_assignment_e/screens/details_screen.dart';
 import 'package:provider/provider.dart';
@@ -318,22 +319,26 @@ class _FavCard extends StatelessWidget {
                     top: 8,
                     right: isRTL ? null : 8,
                     left:  isRTL ? 8 : null,
-                    child: GestureDetector(
-                      onTap: onUnfav,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.9),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: _C.raspberry.withValues(alpha: 0.3),
-                              blurRadius: 6,
-                            ),
-                          ],
+                    child: Semantics(
+                      label: '${l.t('semUnfavorite')} ${product.displayModel(lang)}',
+                      button: true,
+                      child: GestureDetector(
+                        onTap: onUnfav,
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: _C.raspberry.withValues(alpha: 0.3),
+                                blurRadius: 6,
+                              ),
+                            ],
+                          ),
+                          child: const Icon(Icons.favorite_rounded,
+                              color: _C.raspberry, size: 16),
                         ),
-                        child: const Icon(Icons.favorite_rounded,
-                            color: _C.raspberry, size: 16),
                       ),
                     ),
                   ),
@@ -399,18 +404,22 @@ class _FavCard extends StatelessWidget {
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: onAddToCart,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: _C.raspberry,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.add_shopping_cart_rounded,
-                            color: Colors.white,
-                            size: 16,
+                      Semantics(
+                        label: '${l.t('semAddToCart')} ${product.displayModel(lang)}',
+                        button: true,
+                        child: GestureDetector(
+                          onTap: onAddToCart,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: _C.raspberry,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(
+                              Icons.add_shopping_cart_rounded,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                           ),
                         ),
                       ),
@@ -427,7 +436,7 @@ class _FavCard extends StatelessWidget {
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────
-class _EmptyFavorites extends StatelessWidget {
+class _EmptyFavorites extends StatefulWidget {
   final AppLocalizations l;
   final bool isDark;
   final Color textCol, subCol;
@@ -442,7 +451,27 @@ class _EmptyFavorites extends StatelessWidget {
   });
 
   @override
+  State<_EmptyFavorites> createState() => _EmptyFavoritesState();
+}
+
+class _EmptyFavoritesState extends State<_EmptyFavorites> {
+  @override
+  void initState() {
+    super.initState();
+    // Play the empty-favorites sound once, after the first frame, so it fires
+    // only when the empty state first appears — not on every rebuild.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<SoundProvider>().play(SoundType.emptyFavorites);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final l       = widget.l;
+    final textCol = widget.textCol;
+    final subCol  = widget.subCol;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(40),
@@ -479,7 +508,7 @@ class _EmptyFavorites extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             ElevatedButton.icon(
-              onPressed: onBrowse,
+              onPressed: widget.onBrowse,
               icon: const Icon(Icons.store_rounded),
               label: Text(l.t('browseStore')),
               style: ElevatedButton.styleFrom(

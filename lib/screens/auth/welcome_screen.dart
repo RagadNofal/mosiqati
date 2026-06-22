@@ -192,7 +192,10 @@ class _WelcomeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return Semantics(
+      label: '$label — $sublabel',
+      button: true,
+      child: GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -229,6 +232,7 @@ class _WelcomeButton extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ),  // closes GestureDetector
+    ); // closes Semantics
   }
 }

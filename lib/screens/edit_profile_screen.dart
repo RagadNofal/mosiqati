@@ -219,7 +219,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             isDark: isDark,
                             onCard: onCard,
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? l.t('fullName')
+                                ? l.t('fieldRequired')
                                 : null,
                           ),
                           const SizedBox(height: 16),

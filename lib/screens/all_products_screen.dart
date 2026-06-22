@@ -5,6 +5,7 @@ import 'package:project_assignment_e/providers/cart_provider.dart';
 import 'package:project_assignment_e/providers/products_provider.dart';
 import 'package:project_assignment_e/providers/theme_provider.dart';
 import 'package:project_assignment_e/screens/details_screen.dart';
+import 'package:project_assignment_e/widgets/product_image.dart';
 import 'package:provider/provider.dart';
 
 class _C {
@@ -20,12 +21,13 @@ class _C {
 }
 
 const _kCategories = [
-  {'key': '',       'label': 'All',    'emoji': '🎵'},
-  {'key': 'oud',    'label': 'Oud',    'emoji': '🪕'},
-  {'key': 'guitar', 'label': 'Guitar', 'emoji': '🎸'},
-  {'key': 'piano',  'label': 'Piano',  'emoji': '🎹'},
-  {'key': 'drums',  'label': 'Drums',  'emoji': '🥁'},
-  {'key': 'studio', 'label': 'Studio', 'emoji': '🎧'},
+  {'key': '',            'label': 'All',          'emoji': '🎵'},
+  {'key': 'oud',         'label': 'Oud',          'emoji': '🪕'},
+  {'key': 'guitar',      'label': 'Guitar',       'emoji': '🎸'},
+  {'key': 'piano',       'label': 'Piano',        'emoji': '🎹'},
+  {'key': 'drums',       'label': 'Drums',        'emoji': '🥁'},
+  {'key': 'studio',      'label': 'Studio',       'emoji': '🎧'},
+  {'key': 'studiotools', 'label': 'Studio Tools', 'emoji': '🎛'},
 ];
 
 class AllProductsScreen extends StatefulWidget {
@@ -99,7 +101,7 @@ class _AllProductsScreenState extends State<AllProductsScreen> {
     final text    = isDark ? Colors.white : _C.wine;
     final subText = isDark ? Colors.white60 : Colors.grey.shade600;
 
-    final products = _filteredProducts(prov.productList);
+    final products = _filteredProducts(prov.allProducts);
 
     return Scaffold(
       backgroundColor: bg,
@@ -383,18 +385,39 @@ class _GridProductCard extends StatelessWidget {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(14),
-                  child: Image.network(
-                    product.image?.toString() ?? '',
-                    width: double.infinity,
-                    height: double.infinity,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Center(
-                      child: Icon(Icons.music_note_rounded,
-                          color: _C.raspberry.withValues(alpha: 0.3), size: 32),
-                    ),
+                  child: ProductImageWidget(
+                    imageUrl: product.image?.toString(),
+                    fit:      BoxFit.contain,
+                    iconSize: 32,
                   ),
                 ),
               ),
+
+              // OOS overlay
+              if ((product.quantity ?? 0) == 0)
+                Positioned.fill(
+                  child: Container(
+                    margin: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade700,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('Out of Stock',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ),
 
               // Favorite
               Positioned(
@@ -481,27 +504,36 @@ class _GridProductCard extends StatelessWidget {
                         fontWeight: FontWeight.w800),
                   ),
                 ),
-                GestureDetector(
-                  onTap: onAddToCart,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 250),
-                    width: 30,
-                    height: 30,
-                    decoration: BoxDecoration(
-                      color: isAdding ? _C.sage : _C.raspberry,
-                      shape: BoxShape.circle,
-                    ),
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: Icon(
-                        isAdding ? Icons.check_rounded : Icons.add_rounded,
-                        key: ValueKey(isAdding),
-                        color: Colors.white,
-                        size: 17,
+                Builder(builder: (_) {
+                  final isOos = (product.quantity ?? 0) == 0;
+                  return GestureDetector(
+                    onTap: isOos ? null : onAddToCart,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 250),
+                      width: 30,
+                      height: 30,
+                      decoration: BoxDecoration(
+                        color: isOos
+                            ? Colors.grey.shade400
+                            : (isAdding ? _C.sage : _C.raspberry),
+                        shape: BoxShape.circle,
+                      ),
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: Icon(
+                          isOos
+                              ? Icons.remove_shopping_cart_rounded
+                              : (isAdding
+                                  ? Icons.check_rounded
+                                  : Icons.add_rounded),
+                          key: ValueKey(isOos ? 'oos' : isAdding),
+                          color: Colors.white,
+                          size: 17,
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ]),
             ]),
           ),

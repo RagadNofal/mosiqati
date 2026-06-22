@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:project_assignment_e/l10n/app_localizations.dart';
+import 'package:project_assignment_e/models/coupon.dart';
 import 'package:project_assignment_e/models/firestore_product.dart';
 import 'package:project_assignment_e/providers/auth_provider.dart';
+import 'package:project_assignment_e/providers/notifications_provider.dart';
 import 'package:project_assignment_e/screens/admin/coupons/admin_coupons_screen.dart';
 import 'package:project_assignment_e/screens/admin/product_form_screen.dart';
 import 'package:project_assignment_e/screens/notifications_screen.dart';
+import 'package:project_assignment_e/services/coupon_service.dart';
 import 'package:project_assignment_e/services/firestore_service.dart';
 import 'package:project_assignment_e/utils/app_colors.dart';
 import 'package:provider/provider.dart';
@@ -127,7 +130,7 @@ class AdminDashboard extends StatelessWidget {
                 ),
               ),
 
-              // ── Stats strip ──────────────────────────────────
+              // ── Stats row 1: product counts ──────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
@@ -138,6 +141,12 @@ class AdminDashboard extends StatelessWidget {
                         value: '$total',
                         icon: Icons.inventory_2_outlined,
                         color: AppColors.primary,
+                        onTap: () => _showProductList(
+                          context,
+                          l.t('allProductsTitle'),
+                          products,
+                          l,
+                        ),
                       ),
                       const SizedBox(width: 10),
                       _StatCard(
@@ -145,6 +154,13 @@ class AdminDashboard extends StatelessWidget {
                         value: '$lowStock',
                         icon: Icons.warning_amber_rounded,
                         color: Colors.orange,
+                        onTap: () => _showProductList(
+                          context,
+                          l.t('lowStockProducts'),
+                          products.where((p) => p.isLowStock).toList(),
+                          l,
+                          emptyKey: 'noLowStockProducts',
+                        ),
                       ),
                       const SizedBox(width: 10),
                       _StatCard(
@@ -152,6 +168,53 @@ class AdminDashboard extends StatelessWidget {
                         value: '$outOfStock',
                         icon: Icons.remove_shopping_cart_outlined,
                         color: Colors.red.shade700,
+                        onTap: () => _showProductList(
+                          context,
+                          l.t('outOfStockProducts'),
+                          products.where((p) => p.isOutOfStock).toList(),
+                          l,
+                          emptyKey: 'noOutOfStockProducts',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── Stats row 2: coupons + notifications ─────────
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: Row(
+                    children: [
+                      // Active coupons count from Firestore stream
+                      Expanded(
+                        child: StreamBuilder<List<Coupon>>(
+                          stream: CouponService().streamAllCoupons(),
+                          builder: (context, snap) {
+                            final activeCoupons = (snap.data ?? [])
+                                .where((c) => c.isCurrentlyValid)
+                                .length;
+                            return _StatTile(
+                              label: l.t('activeCoupons'),
+                              value: '${snap.hasData ? activeCoupons : '-'}',
+                              icon: Icons.local_offer_rounded,
+                              color: const Color(0xFF3D7A6A),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      // Notifications count from provider
+                      Expanded(
+                        child: Consumer<NotificationsProvider>(
+                          builder: (context, notifs, _) => _StatTile(
+                            label: l.t('notificationsCount'),
+                            value: '${notifs.items.length}',
+                            icon: Icons.notifications_rounded,
+                            color: const Color(0xFFD4A853),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -287,8 +350,65 @@ class _StatCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color  color;
+  final VoidCallback? onTap;
 
   const _StatCard({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+            decoration: BoxDecoration(
+              color:        color.withOpacity(0.10),
+              borderRadius: BorderRadius.circular(14),
+              border:       Border.all(color: color.withOpacity(0.25)),
+            ),
+            child: Column(
+              children: [
+                Icon(icon, color: color, size: 26),
+                const SizedBox(height: 6),
+                Text(value,
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: color)),
+                const SizedBox(height: 2),
+                Text(label,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    style: Theme.of(context).textTheme.labelSmall),
+                if (onTap != null) ...[
+                  const SizedBox(height: 2),
+                  Icon(Icons.chevron_right_rounded, color: color, size: 14),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Stat tile — like _StatCard but WITHOUT the Expanded wrapper, so it can be
+// placed inside an explicit Expanded in the second stats row.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _StatTile extends StatelessWidget {
+  final String   label;
+  final String   value;
+  final IconData icon;
+  final Color    color;
+
+  const _StatTile({
     required this.label,
     required this.value,
     required this.icon,
@@ -296,32 +416,109 @@ class _StatCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Expanded(
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
-          decoration: BoxDecoration(
-            color:        color.withOpacity(0.10),
-            borderRadius: BorderRadius.circular(14),
-            border:       Border.all(color: color.withOpacity(0.25)),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: color, size: 26),
-              const SizedBox(height: 6),
-              Text(value,
-                  style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: color)),
-              const SizedBox(height: 2),
-              Text(label,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  style: Theme.of(context).textTheme.labelSmall),
-            ],
-          ),
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+        decoration: BoxDecoration(
+          color:        color.withValues(alpha: 0.10),
+          borderRadius: BorderRadius.circular(14),
+          border:       Border.all(color: color.withValues(alpha: 0.25)),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 26),
+            const SizedBox(height: 6),
+            Text(value,
+                style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: color)),
+            const SizedBox(height: 2),
+            Text(label,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                style: Theme.of(context).textTheme.labelSmall),
+          ],
         ),
       );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper — show a modal bottom sheet with a filtered product list
+// ─────────────────────────────────────────────────────────────────────────────
+
+void _showProductList(
+  BuildContext context,
+  String title,
+  List<FirestoreProduct> products,
+  AppLocalizations l, {
+  String? emptyKey,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.65,
+      maxChildSize: 0.95,
+      minChildSize: 0.4,
+      builder: (ctx, scrollController) => Column(
+        children: [
+          // Drag handle
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 8),
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey.shade400,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Title
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+            child: Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ),
+          const Divider(height: 1),
+          // Product list or empty state
+          Expanded(
+            child: products.isEmpty
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_outline_rounded,
+                              size: 56,
+                              color: Colors.green.shade400),
+                          const SizedBox(height: 12),
+                          Text(
+                            emptyKey != null ? l.t(emptyKey) : l.t('noProducts'),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    controller: scrollController,
+                    itemCount: products.length,
+                    itemBuilder: (_, i) => _ProductTile(product: products[i]),
+                  ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

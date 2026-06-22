@@ -250,8 +250,9 @@ class FirestoreProduct {
 
   /// Convert to the existing [Result] model so all current screens work unchanged.
   Result toResult() => Result(
-        id:            id,
-        name:          nameEn,
+        id:                id,
+        isFirestoreBacked: true,
+        name:              nameEn,
         nameAr:        nameAr.isNotEmpty ? nameAr : null,
         category:      category,
         brand:         brandEn,

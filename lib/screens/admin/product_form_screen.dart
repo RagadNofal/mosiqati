@@ -54,7 +54,7 @@ class _ProductFormScreenState extends State<ProductFormScreen> {
   bool   _isAvailable      = true;
   bool   _isSaving         = false;
 
-  static const _categories = ['guitar', 'piano', 'drums', 'oud', 'studio'];
+  static const _categories = ['guitar', 'piano', 'drums', 'oud', 'studio', 'studioTools'];
 
   @override
   void initState() {

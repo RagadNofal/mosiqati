@@ -8,18 +8,35 @@ import 'package:url_launcher/url_launcher.dart';
 
 // ─── Colours ──────────────────────────────────────────────────────────────────
 class _C {
-  static const raspberry = Color(0xFF912F56);
-  static const rose      = Color(0xFFC4587E);
-  static const plum      = Color(0xFF521945);
-  static const wine      = Color(0xFF361F27);
-  static const gold      = Color(0xFFD4A853);
-  static const sage      = Color(0xFF3D7A6A);
-  static const bgLight   = Color(0xFFFAF0EE);
-  static const bgDark    = Color(0xFF0D090A);
-  static const cardD     = Color(0xFF28141E);
+  static const wine    = Color(0xFF361F27);
+  static const sage    = Color(0xFF3D7A6A);
+  static const bgLight = Color(0xFFFAF0EE);
+  static const bgDark  = Color(0xFF0D090A);
+  static const cardD   = Color(0xFF28141E);
 }
 
-// ─── Resource model ───────────────────────────────────────────────────────────
+// ─── Interactive guide topic ───────────────────────────────────────────────────
+class _Guide {
+  final IconData icon;
+  final int colorHex;
+  final String titleEn;
+  final String titleAr;
+  final String bodyEn;
+  final String bodyAr;
+  final String ytUrl;
+
+  const _Guide({
+    required this.icon,
+    required this.colorHex,
+    required this.titleEn,
+    required this.titleAr,
+    required this.bodyEn,
+    required this.bodyAr,
+    required this.ytUrl,
+  });
+}
+
+// ─── YouTube / website resource ────────────────────────────────────────────────
 class _Resource {
   final IconData icon;
   final String titleKey;
@@ -36,6 +53,7 @@ class _Resource {
   });
 }
 
+// ─── Screen ───────────────────────────────────────────────────────────────────
 class LearnMusicScreen extends StatefulWidget {
   const LearnMusicScreen({super.key});
 
@@ -46,11 +64,134 @@ class LearnMusicScreen extends StatefulWidget {
 class _LearnMusicScreenState extends State<LearnMusicScreen>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double> _fade;
-  late final Animation<Offset> _slide;
+  late final Animation<double>   _fade;
+  late final Animation<Offset>   _slide;
   int? _activeSoundIdx;
 
-  // YouTube links — real beginner playlists
+  // ── 7 interactive guide topics (bilingual inline text) ────────────────────
+  static const _guides = [
+    _Guide(
+      icon: Icons.queue_music_rounded,
+      colorHex: 0xFF912F56,
+      titleEn: 'Guitar Basics',
+      titleAr: 'أساسيات الغيتار',
+      bodyEn: 'Start with the basics: learn to hold the guitar properly and '
+          'understand string names (E A D G B E from low to high). Practice '
+          'open chords — G, C, D, Em, Am — and focus on clean transitions '
+          'before increasing speed. Even 15–20 minutes of focused daily '
+          'practice will produce noticeable progress within weeks.',
+      bodyAr: 'ابدأ بالأساسيات: تعلّم كيفية إمساك الغيتار بشكل صحيح وتعرّف على '
+          'أسماء الأوتار (E A D G B E من الأدنى إلى الأعلى). تدرّب على الأوتار '
+          'المفتوحة الأساسية — G, C, D, Em, Am — وركّز على الانتقال السلس '
+          'بينها قبل تسريع العزف. حتى 15–20 دقيقة من التدريب اليومي المركّز '
+          'ستُنتج تقدماً ملحوظاً في غضون أسابيع.',
+      ytUrl: 'https://www.youtube.com/results?search_query=guitar+basics+for+beginners',
+    ),
+    _Guide(
+      icon: Icons.piano,
+      colorHex: 0xFF521945,
+      titleEn: 'Piano Basics',
+      titleAr: 'أساسيات البيانو',
+      bodyEn: 'Begin by learning correct hand position and key names '
+          '(C D E F G A B repeating across the keyboard). Practice the C '
+          'major scale with each hand separately, then together. Learn simple '
+          'pieces hands-separately before combining them. Use a metronome '
+          'from day one — steady rhythm is the foundation of great piano playing.',
+      bodyAr: 'ابدأ بتعلّم وضعية اليد الصحيحة وأسماء المفاتيح (C D E F G A B '
+          'تتكرر عبر لوحة المفاتيح). تدرّب على سلّم C الكبير بكل يد على حدة، '
+          'ثم كلتيهما معاً. تعلّم المقاطع الموسيقية البسيطة بيدٍ واحدة قبل '
+          'دمجهما. استخدم المترونوم منذ اليوم الأول — الإيقاع الثابت هو أساس '
+          'العزف الرائع على البيانو.',
+      ytUrl: 'https://www.youtube.com/results?search_query=piano+basics+for+beginners',
+    ),
+    _Guide(
+      icon: Icons.music_note_rounded,
+      colorHex: 0xFFB8602A,
+      titleEn: 'Oud Basics',
+      titleAr: 'أساسيات العود',
+      bodyEn: 'The oud has no frets, so ear training is essential from the '
+          'very start. Learn standard tuning (C G D A E from low to high) and '
+          'basic risha (pick) technique — hold it loosely and let it glide. '
+          'Start with maqam Rast to develop your feel for Arabic and Middle '
+          'Eastern scales before moving to Bayati or Hijaz.',
+      bodyAr: 'العود لا يحتوي على حدود (فريتس)، لذا فإن تدريب الأذن أمر أساسي منذ '
+          'البداية. تعلّم ضبط الأوتار القياسي (C G D A E من الأدنى إلى الأعلى) '
+          'وتقنية الريشة الأساسية — أمسكها بخفة ودعها تنزلق. ابدأ بمقام الراست '
+          'لتطوير إحساسك بالسلالم العربية والشرقية قبل الانتقال إلى البياتي '
+          'أو الحجاز.',
+      ytUrl: 'https://www.youtube.com/results?search_query=oud+beginners+lesson',
+    ),
+    _Guide(
+      icon: Icons.graphic_eq_rounded,
+      colorHex: 0xFF2E6D5E,
+      titleEn: 'Drums & Rhythm',
+      titleAr: 'الطبول والإيقاع',
+      bodyEn: 'Start with a basic 4/4 rock beat: hi-hat on every quarter note, '
+          'snare on beats 2 and 4, bass drum on beats 1 and 3. Practice '
+          'each limb independently before combining them. Keep a metronome '
+          'running at a slow tempo — accuracy always comes before speed. '
+          'Once the beat feels natural, gradually increase the tempo.',
+      bodyAr: 'ابدأ بإيقاع روك 4/4 الأساسي: هاي-هات على كل نبضة، سنير على '
+          'النبضتين 2 و4، باس درم على النبضتين 1 و3. تدرّب على كل طرف من '
+          'أطرافك بشكل مستقل قبل دمجها. حافظ على تشغيل المترونوم بإيقاع بطيء '
+          '— الدقة دائماً تأتي قبل السرعة. بمجرد أن يبدو الإيقاع طبيعياً، '
+          'زد السرعة تدريجياً.',
+      ytUrl: 'https://www.youtube.com/results?search_query=drum+lessons+beginners+basic+beat',
+    ),
+    _Guide(
+      icon: Icons.library_music_rounded,
+      colorHex: 0xFF1A3B6B,
+      titleEn: 'Music Theory',
+      titleAr: 'نظرية الموسيقى',
+      bodyEn: 'Music theory explains why music sounds the way it does. Start '
+          'with reading notes on a staff (treble and bass clef), understanding '
+          'intervals, and learning the major scale formula (W-W-H-W-W-W-H). '
+          'Basic theory makes learning any instrument faster, sight-reading '
+          'easier, and improvisation more intuitive.',
+      bodyAr: 'نظرية الموسيقى تشرح لماذا تبدو الموسيقى بالطريقة التي نسمعها. '
+          'ابدأ بقراءة النوتات على المدرج الموسيقي (مفتاح الكمان والباص)، وفهم '
+          'الفترات الموسيقية، وتعلّم صيغة السلّم الكبير (W-W-H-W-W-W-H). '
+          'معرفة النظرية الأساسية تجعل تعلّم أي آلة أسرع وقراءة النوتات أسهل '
+          'والارتجال أكثر سهولة.',
+      ytUrl: 'https://www.youtube.com/results?search_query=music+theory+basics+beginners',
+    ),
+    _Guide(
+      icon: Icons.tune_rounded,
+      colorHex: 0xFF3D7A6A,
+      titleEn: 'Tuning Tips',
+      titleAr: 'نصائح الضبط',
+      bodyEn: 'Always tune before you play — even a slightly out-of-tune '
+          'instrument trains your ear incorrectly. For guitar and oud, use a '
+          'clip-on chromatic tuner or a free tuner app. Acoustic pianos need '
+          'professional tuning every 1–2 years. Drum heads require regular '
+          'tension checks to stay resonant and clear.',
+      bodyAr: 'دائماً اضبط آلتك قبل العزف — حتى الآلة الخارجة عن الضبط قليلاً '
+          'تدرّب أذنك بشكل خاطئ. للغيتار والعود، استخدم ضابط تردد كروماتي أو '
+          'تطبيقاً مجانياً للضبط. يحتاج البيانو الأكوستيكي إلى ضبط احترافي '
+          'كل 1–2 سنوات. تحتاج جلود الطبول إلى فحص منتظم للتوتر للحفاظ على '
+          'صوت رنين واضح.',
+      ytUrl: 'https://www.youtube.com/results?search_query=how+to+tune+guitar+beginners',
+    ),
+    _Guide(
+      icon: Icons.schedule_rounded,
+      colorHex: 0xFF6B3A7D,
+      titleEn: 'Practice Routine',
+      titleAr: 'روتين التدريب',
+      bodyEn: 'A structured routine beats random noodling every time: '
+          '5 min warm-up, 10 min scales or exercises, 15 min on a specific '
+          'difficult passage, 10 min free play. Consistent daily sessions of '
+          '30–45 minutes outperform irregular marathon sessions. Keep a '
+          'practice journal to track goals and progress.',
+      bodyAr: 'الروتين المنظّم يتفوق دائماً على العزف العشوائي: 5 دقائق إحماء، '
+          '10 دقائق سلالم أو تمارين، 15 دقيقة على مقطع صعب بعينه، 10 دقائق '
+          'عزف حر. الجلسات اليومية المنتظمة لمدة 30–45 دقيقة تتفوق على '
+          'الجلسات الطويلة المتقطعة. احتفظ بمفكرة تدريب لتتبع الأهداف '
+          'والتقدم.',
+      ytUrl: 'https://www.youtube.com/results?search_query=music+practice+routine+tips+beginners',
+    ),
+  ];
+
+  // ── YouTube tutorial cards ──────────────────────────────────────────────────
   static const _youtubeLinks = [
     _Resource(
       icon: Icons.queue_music_rounded,
@@ -88,7 +229,7 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
     ),
   ];
 
-  // External learning websites
+  // ── External learning websites ──────────────────────────────────────────────
   static const _learnLinks = [
     _Resource(
       icon: Icons.open_in_new_rounded,
@@ -128,6 +269,7 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
     super.dispose();
   }
 
+  // ── URL launcher ─────────────────────────────────────────────────────────────
   Future<void> _launch(String url) async {
     final uri = Uri.parse(url);
     if (await canLaunchUrl(uri)) {
@@ -135,21 +277,130 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
     }
   }
 
+  // ── Guide detail bottom sheet ─────────────────────────────────────────────────
+  void _showGuide(_Guide guide, bool isAr, bool isDark) {
+    final cardBg    = isDark ? _C.cardD   : Colors.white;
+    final textColor = isDark ? Colors.white : _C.wine;
+    final accent    = Color(guide.colorHex);
+    final title     = isAr ? guide.titleAr : guide.titleEn;
+    final body      = isAr ? guide.bodyAr  : guide.bodyEn;
+
+    HapticFeedback.lightImpact();
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.55,
+        minChildSize: 0.4,
+        maxChildSize: 0.85,
+        builder: (sheetCtx, scrollCtrl) => Container(
+          decoration: BoxDecoration(
+            color: cardBg,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          child: Column(children: [
+            // ── Drag handle
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // ── Scrollable content
+            Expanded(
+              child: ListView(
+                controller: scrollCtrl,
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                children: [
+                  // Header row: icon + title
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Icon(guide.icon, color: accent, size: 28),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            color: textColor,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Divider(color: accent.withValues(alpha: 0.2)),
+                  const SizedBox(height: 14),
+                  // Body explanation
+                  Text(
+                    body,
+                    textDirection:
+                        isAr ? TextDirection.rtl : TextDirection.ltr,
+                    style: TextStyle(
+                      color: textColor.withValues(alpha: 0.85),
+                      fontSize: 14.5,
+                      height: 1.75,
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  // Watch on YouTube button
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(sheetCtx);
+                        _launch(guide.ytUrl);
+                      },
+                      icon: const Icon(
+                          Icons.play_circle_filled_rounded,
+                          color: Colors.white),
+                      label: Text(
+                        isAr ? 'شاهد على يوتيوب' : 'Watch on YouTube',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFCC0000),
+                        shape: const StadiumBorder(),
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 14),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ]),
+        ),
+      ),
+    );
+  }
+
+  // ── Build ────────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     final l      = AppLocalizations.of(context);
     final isDark = context.watch<ThemeProvider>().isDark;
+    final isAr   = Localizations.localeOf(context).languageCode == 'ar';
     final bg     = isDark ? _C.bgDark  : _C.bgLight;
     final cardBg = isDark ? _C.cardD   : Colors.white;
     final onCard = isDark ? Colors.white : _C.wine;
-
-    final tips = [
-      l.t('learnTip1'),
-      l.t('learnTip2'),
-      l.t('learnTip3'),
-      l.t('learnTip4'),
-      l.t('learnTip5'),
-    ];
 
     return Scaffold(
       backgroundColor: bg,
@@ -160,7 +411,8 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
           child: CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // ── App bar ──────────────────────────────────────────────────
+
+              // ── App bar ────────────────────────────────────────────────
               SliverAppBar(
                 expandedHeight: 170,
                 pinned: true,
@@ -181,7 +433,11 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
                   background: Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Color(0xFF1A4A3E), _C.sage, Color(0xFF5AAB99)],
+                        colors: [
+                          Color(0xFF1A4A3E),
+                          _C.sage,
+                          Color(0xFF5AAB99),
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -197,19 +453,21 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
                               const Icon(Icons.school_rounded,
                                   size: 36, color: Colors.white),
                               const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(l.t('learnTitle'),
-                                      style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.w800)),
-                                  Text(l.t('learnSub'),
-                                      style: const TextStyle(
-                                          color: Colors.white70,
-                                          fontSize: 13)),
-                                ],
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(l.t('learnTitle'),
+                                        style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 24,
+                                            fontWeight: FontWeight.w800)),
+                                    Text(l.t('learnSub'),
+                                        style: const TextStyle(
+                                            color: Colors.white70,
+                                            fontSize: 13)),
+                                  ],
+                                ),
                               ),
                             ]),
                           ],
@@ -220,73 +478,28 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
                 ),
               ),
 
-              // ── Content ──────────────────────────────────────────────────
+              // ── Main content ───────────────────────────────────────────
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(16, 24, 16, 100),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Tips section
-                      _sectionLabel(l.t('learnTipsTitle'), onCard),
+
+                      // ── Guides & Tips section ──────────────────────────
+                      _sectionLabel(l.t('learnGuidesTitle'), onCard),
                       const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: cardBg,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(
-                                  alpha: isDark ? 0.25 : 0.06),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: List.generate(tips.length, (i) {
-                            final isLast = i == tips.length - 1;
-                            return Column(children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Container(
-                                      width: 28,
-                                      height: 28,
-                                      decoration: BoxDecoration(
-                                        color: _C.sage.withValues(alpha: 0.15),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      alignment: Alignment.center,
-                                      child: Text('${i + 1}',
-                                          style: const TextStyle(
-                                              color: _C.sage,
-                                              fontWeight: FontWeight.w800,
-                                              fontSize: 12)),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(tips[i],
-                                          style: TextStyle(
-                                              color: onCard.withValues(
-                                                  alpha: 0.8),
-                                              fontSize: 13,
-                                              height: 1.5)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (!isLast)
-                                const Divider(height: 1, indent: 56),
-                            ]);
-                          }),
-                        ),
+                      _GuidesCard(
+                        guides: _guides,
+                        isAr: isAr,
+                        isDark: isDark,
+                        cardBg: cardBg,
+                        onCard: onCard,
+                        onTap: (g) => _showGuide(g, isAr, isDark),
                       ),
                       const SizedBox(height: 28),
 
-                      // YouTube section
+                      // ── YouTube tutorials ──────────────────────────────
                       _sectionLabel(l.t('learnYouTube'), onCard),
                       const SizedBox(height: 12),
                       SizedBox(
@@ -298,26 +511,26 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
                           separatorBuilder: (_, __) =>
                               const SizedBox(width: 12),
                           itemBuilder: (_, i) {
-                            final res = _youtubeLinks[i];
+                            final res      = _youtubeLinks[i];
                             final isActive = _activeSoundIdx == i;
                             return _ResourceCard(
                               resource: res,
                               label: l.t(res.titleKey),
                               isActive: isActive,
-                              onTap: () {
+                              onTap: () async {
                                 HapticFeedback.lightImpact();
                                 if (res.sound != null) {
                                   context
                                       .read<SoundProvider>()
                                       .playInstrument(res.sound!);
                                   setState(() => _activeSoundIdx = i);
-                                  Future.delayed(
-                                      const Duration(milliseconds: 1500),
-                                      () {
-                                    if (mounted) {
-                                      setState(() => _activeSoundIdx = null);
-                                    }
-                                  });
+                                  // Brief delay so the sound starts before
+                                  // the browser opens and the app backgrounds.
+                                  await Future.delayed(
+                                      const Duration(milliseconds: 600));
+                                  if (mounted) {
+                                    setState(() => _activeSoundIdx = null);
+                                  }
                                 }
                                 _launch(res.url);
                               },
@@ -327,77 +540,19 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
                       ),
                       const SizedBox(height: 28),
 
-                      // Learning resources section
+                      // ── Learning websites ──────────────────────────────
                       _sectionLabel(l.t('learnLinks'), onCard),
                       const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: cardBg,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(
-                                  alpha: isDark ? 0.25 : 0.06),
-                              blurRadius: 16,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children:
-                              List.generate(_learnLinks.length, (i) {
-                            final res = _learnLinks[i];
-                            final isLast = i == _learnLinks.length - 1;
-                            final color = Color(res.gradColors[0]);
-                            return Column(children: [
-                              InkWell(
-                                borderRadius: BorderRadius.circular(20),
-                                onTap: () {
-                                  HapticFeedback.lightImpact();
-                                  _launch(res.url);
-                                },
-                                child: Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                      16, 14, 16, 14),
-                                  child: Row(children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: color.withValues(alpha: 0.15),
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(res.icon,
-                                          size: 18, color: color),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(l.t(res.titleKey),
-                                              style: TextStyle(
-                                                color: onCard,
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                              )),
-                                          Text(res.url,
-                                              style: TextStyle(
-                                                  color: color,
-                                                  fontSize: 11),
-                                              overflow: TextOverflow.ellipsis),
-                                        ],
-                                      ),
-                                    ),
-                                    Icon(Icons.open_in_new_rounded,
-                                        color: color, size: 16),
-                                  ]),
-                                ),
-                              ),
-                              if (!isLast) const Divider(height: 1, indent: 54),
-                            ]);
-                          }),
-                        ),
+                      _WebsitesCard(
+                        links: _learnLinks,
+                        l: l,
+                        isDark: isDark,
+                        cardBg: cardBg,
+                        onCard: onCard,
+                        onTap: (url) {
+                          HapticFeedback.lightImpact();
+                          _launch(url);
+                        },
                       ),
                     ],
                   ),
@@ -410,6 +565,7 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
     );
   }
 
+  // ── Section label helper ─────────────────────────────────────────────────────
   Widget _sectionLabel(String title, Color color) => Text(
         title.toUpperCase(),
         style: TextStyle(
@@ -421,7 +577,181 @@ class _LearnMusicScreenState extends State<LearnMusicScreen>
       );
 }
 
-// ─── Resource Card (horizontal scroll) ────────────────────────────────────────
+// ─── Guides card list ──────────────────────────────────────────────────────────
+class _GuidesCard extends StatelessWidget {
+  final List<_Guide> guides;
+  final bool isAr;
+  final bool isDark;
+  final Color cardBg;
+  final Color onCard;
+  final void Function(_Guide) onTap;
+
+  const _GuidesCard({
+    required this.guides,
+    required this.isAr,
+    required this.isDark,
+    required this.cardBg,
+    required this.onCard,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: List.generate(guides.length, (i) {
+          final guide  = guides[i];
+          final isLast = i == guides.length - 1;
+          final accent = Color(guide.colorHex);
+          final title  = isAr ? guide.titleAr : guide.titleEn;
+
+          return Column(children: [
+            InkWell(
+              onTap: () => onTap(guide),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 13, 16, 13),
+                child: Row(children: [
+                  // Coloured icon circle
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: accent.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Icon(guide.icon, size: 20, color: accent),
+                  ),
+                  const SizedBox(width: 12),
+                  // Title
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: onCard,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  // Chevron
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    color: accent.withValues(alpha: 0.55),
+                    size: 22,
+                  ),
+                ]),
+              ),
+            ),
+            if (!isLast) Divider(height: 1, indent: 66, color: Colors.grey.withValues(alpha: 0.15)),
+          ]);
+        }),
+      ),
+    );
+  }
+}
+
+// ─── Website links card ────────────────────────────────────────────────────────
+class _WebsitesCard extends StatelessWidget {
+  final List<_Resource> links;
+  final AppLocalizations l;
+  final bool isDark;
+  final Color cardBg;
+  final Color onCard;
+  final void Function(String url) onTap;
+
+  const _WebsitesCard({
+    required this.links,
+    required this.l,
+    required this.isDark,
+    required this.cardBg,
+    required this.onCard,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: List.generate(links.length, (i) {
+          final res    = links[i];
+          final isLast = i == links.length - 1;
+          final color  = Color(res.gradColors[0]);
+
+          return Column(children: [
+            InkWell(
+              onTap: () => onTap(res.url),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                child: Row(children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(res.icon, size: 18, color: color),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(l.t(res.titleKey),
+                            style: TextStyle(
+                              color: onCard,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            )),
+                        Text(res.url,
+                            style:
+                                TextStyle(color: color, fontSize: 11),
+                            overflow: TextOverflow.ellipsis),
+                      ],
+                    ),
+                  ),
+                  Icon(Icons.open_in_new_rounded,
+                      color: color, size: 16),
+                ]),
+              ),
+            ),
+            if (!isLast)
+              Divider(
+                  height: 1,
+                  indent: 54,
+                  color: Colors.grey.withValues(alpha: 0.15)),
+          ]);
+        }),
+      ),
+    );
+  }
+}
+
+// ─── YouTube resource card (horizontal scroll) ─────────────────────────────────
 class _ResourceCard extends StatelessWidget {
   final _Resource resource;
   final String label;
@@ -454,8 +784,8 @@ class _ResourceCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Color(resource.gradColors[0]).withValues(
-                    alpha: isActive ? 0.5 : 0.25),
+                color: Color(resource.gradColors[0])
+                    .withValues(alpha: isActive ? 0.5 : 0.25),
                 blurRadius: isActive ? 16 : 8,
                 offset: const Offset(0, 4),
               ),
@@ -470,8 +800,7 @@ class _ResourceCard extends StatelessWidget {
               AnimatedScale(
                 scale: isActive ? 1.2 : 1.0,
                 duration: const Duration(milliseconds: 200),
-                child: Icon(resource.icon,
-                    size: 30, color: Colors.white),
+                child: Icon(resource.icon, size: 30, color: Colors.white),
               ),
               const SizedBox(height: 6),
               Text(label,

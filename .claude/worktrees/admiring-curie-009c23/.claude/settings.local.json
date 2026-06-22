@@ -31,7 +31,13 @@
       "Bash(findstr /v \"build\\\\\\\\\")",
       "Bash(dir /s /b \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\lib\\\\providers\\\\auth_provider.dart\")",
       "Bash(dir /s /b \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\lib\\\\providers\\\\*.dart\")",
-      "Bash(python3 -c ' *)"
+      "Bash(python3 -c ' *)",
+      "Bash(grep -q ''\\\\''__TRACKED_VAR__'\\\\''' lib/l10n/app_localizations.dart)",
+      "Bash(Get-ChildItem \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\assets\" -Recurse)",
+      "Bash(Select-Object FullName)",
+      "Bash(dir \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\.claude\\\\worktrees\\\\admiring-curie-009c23\\\\lib\\\\screens\\\\orders\")",
+      "Bash(dir \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\lib\\\\screens\\\\orders\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\user\\\\Desktop\\\\project_assignment_e-main\\\\docs\")"
     ]
   }
 }

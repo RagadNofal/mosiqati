@@ -9,7 +9,6 @@ import 'package:url_launcher/url_launcher.dart';
 // ─── Colours ──────────────────────────────────────────────────────────────────
 class _C {
   static const raspberry = Color(0xFF912F56);
-  static const rose      = Color(0xFFC4587E);
   static const plum      = Color(0xFF521945);
   static const wine      = Color(0xFF361F27);
   static const gold      = Color(0xFFD4A853);
@@ -85,7 +84,7 @@ class _AboutScreenState extends State<AboutScreen>
             slivers: [
               // ── App bar ─────────────────────────────────────────────────
               SliverAppBar(
-                expandedHeight: 200,
+                expandedHeight: 250,
                 pinned: true,
                 backgroundColor: _C.plum,
                 leading: Semantics(
@@ -121,33 +120,37 @@ class _AboutScreenState extends State<AboutScreen>
                     ),
                     child: SafeArea(
                       child: Padding(
-                        padding: const EdgeInsets.fromLTRB(20, 50, 20, 20),
+                        // Reduced top padding (was 50) so header content
+                        // always fits inside expandedHeight on all devices.
+                        padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             // App logo
                             Container(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
                                 color: Colors.white.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(Icons.music_note_rounded,
-                                  color: Colors.white, size: 42),
+                                  color: Colors.white, size: 38),
                             ),
-                            const SizedBox(height: 12),
+                            const SizedBox(height: 10),
                             Text(
                               l.t('appName'),
                               style: const TextStyle(
                                 color: Colors.white,
-                                fontSize: 26,
+                                fontSize: 24,
                                 fontWeight: FontWeight.w800,
                                 letterSpacing: 2,
                               ),
                             ),
+                            const SizedBox(height: 2),
                             Text(
                               l.t('tagline'),
+                              textAlign: TextAlign.center,
                               style: const TextStyle(
                                   color: Colors.white70, fontSize: 13),
                             ),
@@ -352,12 +355,14 @@ class _SectionCard extends StatelessWidget {
               child: Icon(icon, color: iconColor, size: 20),
             ),
             const SizedBox(width: 10),
-            Text(
-              title,
-              style: TextStyle(
-                color: isDark ? Colors.white : _C.wine,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
+            Flexible(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: isDark ? Colors.white : _C.wine,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ]),

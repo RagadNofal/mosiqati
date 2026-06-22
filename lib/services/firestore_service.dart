@@ -160,6 +160,67 @@ class FirestoreService {
       });
     });
   }
+
+  // ── User favorites ────────────────────────────────────────────────────────
+
+  CollectionReference<Map<String, dynamic>> _userFavorites(String uid) =>
+      _db.collection('users').doc(uid).collection('favorites');
+
+  /// Returns the set of product IDs the user has saved as favourites.
+  Future<Set<String>> loadFavorites(String uid) async {
+    final snap = await _userFavorites(uid).get();
+    return snap.docs.map((d) => d.id).toSet();
+  }
+
+  /// Persists a single favourite product for [uid].
+  Future<void> addFavorite(String uid, String productId) =>
+      _userFavorites(uid).doc(productId).set({
+        'addedAt': FieldValue.serverTimestamp(),
+      });
+
+  /// Removes a favourite product for [uid].
+  Future<void> removeFavorite(String uid, String productId) =>
+      _userFavorites(uid).doc(productId).delete();
+
+  // ── User cart ─────────────────────────────────────────────────────────────
+
+  CollectionReference<Map<String, dynamic>> _userCart(String uid) =>
+      _db.collection('users').doc(uid).collection('cart');
+
+  /// Returns all cart documents for [uid].
+  /// Each map includes a 'productId' field equal to the document ID.
+  Future<List<Map<String, dynamic>>> loadCart(String uid) async {
+    final snap = await _userCart(uid).get();
+    return snap.docs
+        .map((d) => <String, dynamic>{...d.data(), 'productId': d.id})
+        .toList();
+  }
+
+  /// Creates or overwrites a cart item for [productId].
+  /// Automatically adds an `updatedAt` server timestamp.
+  Future<void> upsertCartItem(
+    String uid,
+    String productId,
+    Map<String, dynamic> data,
+  ) =>
+      _userCart(uid).doc(productId).set({
+        ...data,
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+  /// Removes a single cart item for [uid].
+  Future<void> removeCartItem(String uid, String productId) =>
+      _userCart(uid).doc(productId).delete();
+
+  /// Deletes every cart item for [uid] in a single batch.
+  Future<void> clearUserCart(String uid) async {
+    final snap  = await _userCart(uid).get();
+    final batch = _db.batch();
+    for (final doc in snap.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
 }
 
 /// Thrown when a checkout transaction fails due to stock or coupon issues.

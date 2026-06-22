@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python -c \"from database import initialize_database; initialize_database\\(\\); print\\('DB OK'\\)\")",
       "Skill(anthropic-skills:docx)",
-      "Skill(anthropic-skills:docx:*)"
+      "Skill(anthropic-skills:docx:*)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(not exist *)",
+      "PowerShell(New-Item -ItemType Directory -Force \"C:\\\\Users\\\\user\\\\Desktop\\\\graduation\\\\media\")"
     ]
   }
 }

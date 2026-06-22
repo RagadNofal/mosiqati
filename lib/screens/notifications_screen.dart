@@ -231,6 +231,7 @@ class _NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final lang = Localizations.localeOf(context).languageCode;
     return Dismissible(
       key: Key(item.id),
       direction: DismissDirection.endToStart,
@@ -295,7 +296,7 @@ class _NotificationCard extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            l.t(item.titleKey),
+                            item.getTitle(lang, l.t),
                             style: TextStyle(
                               color: textCol,
                               fontWeight: item.isRead
@@ -318,7 +319,7 @@ class _NotificationCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      l.t(item.bodyKey),
+                      item.getBody(lang, l.t),
                       style: TextStyle(color: subCol, fontSize: 13, height: 1.4),
                     ),
                     const SizedBox(height: 8),

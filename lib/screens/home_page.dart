@@ -9,11 +9,17 @@ import 'package:project_assignment_e/providers/sound_provider.dart';
 import 'package:project_assignment_e/providers/theme_provider.dart';
 import 'package:project_assignment_e/screens/all_products_screen.dart';
 import 'package:project_assignment_e/screens/cart_screen.dart';
+import 'package:project_assignment_e/widgets/product_image.dart';
 import 'package:project_assignment_e/screens/details_screen.dart';
 import 'package:project_assignment_e/screens/favorites_screen.dart';
 import 'package:project_assignment_e/screens/notifications_screen.dart';
 import 'package:project_assignment_e/screens/profile_screen.dart';
+import 'package:project_assignment_e/screens/offers_screen.dart';
 import 'package:project_assignment_e/screens/services_screen.dart';
+import 'package:project_assignment_e/screens/learn_music_screen.dart';
+import 'package:project_assignment_e/screens/about_screen.dart';
+import 'package:project_assignment_e/services/coupon_service.dart';
+import 'package:project_assignment_e/models/coupon.dart';
 import 'package:provider/provider.dart';
 import 'package:project_assignment_e/l10n/app_localizations.dart';
 
@@ -48,7 +54,7 @@ class _C {
 //  HomeScreen
 // ──────────────────────────────────────────────────────────────────────────────
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -124,18 +130,19 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // ── Category data ───────────────────────────────────────
   static const _categories = [
-    {'emoji': '🪕', 'label': 'Oud',    'key': 'oud',    'color': 0xFFB8602A},
-    {'emoji': '🎸', 'label': 'Guitar', 'key': 'guitar', 'color': 0xFF912F56},
-    {'emoji': '🎹', 'label': 'Piano',  'key': 'piano',  'color': 0xFF521945},
-    {'emoji': '🥁', 'label': 'Drums',  'key': 'drums',  'color': 0xFF2E6D5E},
-    {'emoji': '🎧', 'label': 'Studio', 'key': 'studio', 'color': 0xFF1A3B6B},
+    {'icon': Icons.queue_music_rounded, 'label': 'Oud',          'key': 'oud',         'color': 0xFFB8602A},
+    {'icon': Icons.music_note_rounded,  'label': 'Guitar',       'key': 'guitar',      'color': 0xFF912F56},
+    {'icon': Icons.piano,               'label': 'Piano',        'key': 'piano',       'color': 0xFF521945},
+    {'icon': Icons.speaker_rounded,     'label': 'Drums',        'key': 'drums',       'color': 0xFF2E6D5E},
+    {'icon': Icons.headset_rounded,     'label': 'Studio',       'key': 'studio',      'color': 0xFF1A3B6B},
+    {'icon': Icons.tune_rounded,        'label': 'Studio Tools', 'key': 'studiotools', 'color': 0xFF1A5F7A},
   ];
 
   // ── Promo banners ───────────────────────────────────────
   static const _promos = [
-    {'label': '10% OFF', 'sub': 'On all Ouds this week', 'icon': '🪕', 'grad': [0xFFB8602A, 0xFF7A3A10]},
-    {'label': 'FREE Shipping', 'sub': 'Orders over 200 JOD', 'icon': '🚚', 'grad': [0xFF2E6D5E, 0xFF1A4A3E]},
-    {'label': 'NEW Arrivals', 'sub': 'Studio gear just landed', 'icon': '🎧', 'grad': [0xFF521945, 0xFF2D0E28]},
+    {'label': '10% OFF', 'sub': 'On all Ouds this week', 'icon': Icons.local_offer_rounded, 'grad': [0xFFB8602A, 0xFF7A3A10]},
+    {'label': 'FREE Shipping', 'sub': 'Orders over 200 JOD', 'icon': Icons.local_shipping_rounded, 'grad': [0xFF2E6D5E, 0xFF1A4A3E]},
+    {'label': 'NEW Arrivals', 'sub': 'Studio gear just landed', 'icon': Icons.headset_rounded, 'grad': [0xFF521945, 0xFF2D0E28]},
   ];
 
   // ── Lifecycle ───────────────────────────────────────────
@@ -187,15 +194,45 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   void _filterBy(String key) {
     _tap();
-    setState(() {
-      if (_selectedCat == key) {
-        _selectedCat = '';
-        context.read<ProductProvider>().clearFilter();
-      } else {
-        _selectedCat = key;
-        context.read<ProductProvider>().filterByCate(key);
-      }
-    });
+    // Play instrument/category sound only when selecting (not deselecting)
+    if (_selectedCat != key) {
+      _playCategorySound(key);
+    }
+    // IMPORTANT: call the provider methods OUTSIDE setState.
+    // Calling notifyListeners() inside a setState callback can trigger
+    // "setState called during build" in debug mode, causing a brief red
+    // error widget before the next frame renders correctly.
+    final prov = context.read<ProductProvider>();
+    if (_selectedCat == key) {
+      // Deselect: clear the category filter.
+      setState(() => _selectedCat = '');
+      prov.clearFilter();
+    } else {
+      // Select: apply the category filter.
+      setState(() => _selectedCat = key);
+      prov.filterByCate(key);
+    }
+  }
+
+  /// Maps a category key to its matching sound.
+  /// Instrument categories use [playInstrument]; studio categories fall back
+  /// to the generic click sound since no studio audio file exists.
+  void _playCategorySound(String key) {
+    final snd = context.read<SoundProvider>();
+    switch (key) {
+      case 'guitar':
+        snd.playInstrument(InstrumentSound.guitar);
+      case 'piano':
+        snd.playInstrument(InstrumentSound.piano);
+      case 'drums':
+        snd.playInstrument(InstrumentSound.drums);
+      case 'oud':
+        snd.playInstrument(InstrumentSound.oud);
+      case 'studio':
+      case 'studiotools':
+        // No dedicated studio audio file — use generic UI click sound.
+        snd.play(SoundType.click);
+    }
   }
 
   Future<void> _addToCart(dynamic product) async {
@@ -288,11 +325,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     prov.setRating(product.id, tmp);
                     _success();
                     Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    ScaffoldMessenger.of(context)
+                      ..clearSnackBars()
+                      ..showSnackBar(SnackBar(
                       backgroundColor: _C.sage,
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16)),
+                      duration: const Duration(seconds: 2),
                       content: Row(children: [
                         const Icon(Icons.star_rounded, color: Colors.white, size: 18),
                         const SizedBox(width: 8),
@@ -601,8 +641,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(children: [
-                                Text(p['icon'] as String,
-                                    style: const TextStyle(fontSize: 26)),
+                                Icon(p['icon'] as IconData,
+                                    color: Colors.white70, size: 28),
                                 const SizedBox(width: 10),
                                 Expanded(child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -684,7 +724,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                 color: text.withValues(alpha: 0.4)),
                             border: InputBorder.none,
                             contentPadding:
-                            const EdgeInsets.only(top: 15),
+                            const EdgeInsets.symmetric(vertical: 14),
                           ),
                         ),
                       ),
@@ -748,15 +788,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(cat['emoji'] as String,
-                                      style: const TextStyle(fontSize: 28)),
+                                  Icon(
+                                    cat['icon'] as IconData,
+                                    color: active ? Colors.white : color,
+                                    size: 26,
+                                  ),
                                   const SizedBox(height: 5),
                                   Text(l.t(catKey),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      textAlign: TextAlign.center,
                                       style: TextStyle(
                                         color: active
                                             ? Colors.white
                                             : (isDark ? Colors.white70 : _C.wine),
-                                        fontSize: 12,
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                       )),
                                 ],
@@ -792,7 +838,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 ),
 
                 // ─────────────────────────────────────────────
-                //  7. SOUND MOOD CARD
+                //  7. OFFERS & DISCOUNTS
+                // ─────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 28, 20, 0),
+                    child: _SectionHeader(
+                      title: l.t('offersDiscounts'),
+                      action: l.t('seeAll'),
+                      text: text,
+                      onAction: () => Navigator.push(
+                          context, _slide(const OffersScreen())),
+                    ),
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: _OffersStrip(
+                      lang: lang,
+                      l: l,
+                      surface: surface,
+                      text: text,
+                      onSeeAll: () => Navigator.push(
+                          context, _slide(const OffersScreen())),
+                    ),
+                  ),
+                ),
+
+                // ─────────────────────────────────────────────
+                //  8. SOUND MOOD CARD
                 // ─────────────────────────────────────────────
                 SliverToBoxAdapter(
                   child: Padding(
@@ -850,6 +926,152 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                             child: Icon(isRTL ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
                                 color: Colors.white, size: 20),
+                          ),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ─────────────────────────────────────────────
+                //  9. LEARN MUSIC CARD
+                // ─────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: GestureDetector(
+                      onTap: () {
+                        _tap();
+                        Navigator.push(context, _slide(const LearnMusicScreen()));
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF1E5C4A), Color(0xFF3D7A6A)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF1E5C4A).withValues(alpha: 0.35),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Row(children: [
+                          Container(
+                            width: 70, height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: const Icon(Icons.school_rounded,
+                                color: Colors.white, size: 36),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(l.t('learningResources'),
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 5),
+                                Text(l.t('learningResourcesSub'),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isRTL ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                              color: Colors.white, size: 20),
+                          ),
+                        ]),
+                      ),
+                    ),
+                  ),
+                ),
+
+                // ─────────────────────────────────────────────
+                //  10. ABOUT US CARD
+                // ─────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                    child: GestureDetector(
+                      onTap: () {
+                        _tap();
+                        Navigator.push(context, _slide(const AboutScreen()));
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [_C.wine, _C.plum],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _C.plum.withValues(alpha: 0.35),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Row(children: [
+                          Container(
+                            width: 70, height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            child: const Icon(Icons.store_rounded,
+                                color: Colors.white, size: 36),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(l.t('aboutUs'),
+                                    style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 5),
+                                Text(l.t('aboutUsHomeSub'),
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 13)),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              isRTL ? Icons.arrow_back_rounded : Icons.arrow_forward_rounded,
+                              color: Colors.white, size: 20),
                           ),
                         ]),
                       ),
@@ -1160,6 +1382,9 @@ class _ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l           = AppLocalizations.of(context);
+    final productName = product.displayModel(lang);
+
     return Container(
       width: 185,
       decoration: BoxDecoration(
@@ -1176,26 +1401,51 @@ class _ProductCard extends StatelessWidget {
         Expanded(
           child: Stack(children: [
             // Background + image
-            Container(
-              margin: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: card,
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(18),
-                child: Image.network(
-                  product.image?.toString() ?? '',
-                  width: double.infinity,
-                  height: double.infinity,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Center(
-                    child: Icon(Icons.music_note_rounded,
-                        color: _C.raspberry.withValues(alpha: 0.3), size: 40),
+            Semantics(
+              label: '${l.t('semProductImage')} $productName',
+              image: true,
+              child: Container(
+                margin: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: card,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: ProductImageWidget(
+                    imageUrl: product.image?.toString(),
+                    fit: BoxFit.contain,
+                    iconSize: 40,
                   ),
                 ),
               ),
             ),
+
+            // Out of Stock overlay
+            if ((product.quantity ?? 0) == 0)
+              Positioned(
+                left: 10, right: 10, top: 10, bottom: 10,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Container(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    alignment: Alignment.center,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade700,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text('OUT OF STOCK',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5)),
+                    ),
+                  ),
+                ),
+              ),
 
             // NEW badge
             if (isNew)
@@ -1237,28 +1487,34 @@ class _ProductCard extends StatelessWidget {
 
             // Favorite button
             Positioned(right: 16, top: 16,
-              child: GestureDetector(
-                onTap: onFav,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  padding: const EdgeInsets.all(7),
-                  decoration: BoxDecoration(
-                    color: isFav
-                        ? _C.raspberry.withValues(alpha: 0.15)
-                        : Colors.white.withValues(alpha: 0.9),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 6),
-                    ],
-                  ),
-                  child: AnimatedScale(
-                    scale: isFav ? 1.2 : 1.0,
-                    duration: const Duration(milliseconds: 200),
-                    child: Icon(
-                      isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
-                      color: isFav ? _C.raspberry : Colors.grey.shade400,
-                      size: 18,
+              child: Semantics(
+                label: isFav
+                    ? '${l.t('semFavoriteRemove')} $productName'
+                    : '${l.t('semFavoriteAdd')} $productName',
+                button: true,
+                child: GestureDetector(
+                  onTap: onFav,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 250),
+                    padding: const EdgeInsets.all(7),
+                    decoration: BoxDecoration(
+                      color: isFav
+                          ? _C.raspberry.withValues(alpha: 0.15)
+                          : Colors.white.withValues(alpha: 0.9),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 6),
+                      ],
+                    ),
+                    child: AnimatedScale(
+                      scale: isFav ? 1.2 : 1.0,
+                      duration: const Duration(milliseconds: 200),
+                      child: Icon(
+                        isFav ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+                        color: isFav ? _C.raspberry : Colors.grey.shade400,
+                        size: 18,
+                      ),
                     ),
                   ),
                 ),
@@ -1318,38 +1574,59 @@ class _ProductCard extends StatelessWidget {
                         fontSize: 17,
                         fontWeight: FontWeight.w800)),
               ),
-              // Quick Add to Cart
-              GestureDetector(
-                onTap: onAddToCart,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: isAdding ? _C.sage : _C.raspberry,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: (isAdding ? _C.sage : _C.raspberry)
-                            .withValues(alpha: 0.4),
-                        blurRadius: 8,
-                        offset: const Offset(0, 3),
+              // Quick Add to Cart — disabled when out of stock
+              Builder(builder: (ctx) {
+                final isOos    = (product.quantity ?? 0) == 0;
+                final btnColor = isOos
+                    ? Colors.grey.shade400
+                    : (isAdding ? _C.sage : _C.raspberry);
+                return Semantics(
+                  label: isOos
+                      ? l.t('semOutOfStock')
+                      : '${l.t('semAddToCart')} $productName',
+                  button: true,
+                  enabled: !isOos,
+                  child: GestureDetector(
+                    onTap: isOos ? null : onAddToCart,
+                    // Minimum 48×48 touch target (material guideline)
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 300),
+                          width: 34,
+                          height: 34,
+                          decoration: BoxDecoration(
+                            color: btnColor,
+                            shape: BoxShape.circle,
+                            boxShadow: isOos
+                                ? []
+                                : [
+                                    BoxShadow(
+                                      color: btnColor.withValues(alpha: 0.4),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
+                          ),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: Icon(
+                              isOos
+                                  ? Icons.remove_shopping_cart_rounded
+                                  : (isAdding ? Icons.check_rounded : Icons.add_rounded),
+                              key: ValueKey(isOos ? 'oos' : (isAdding ? 'check' : 'add')),
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
                       ),
-                    ],
-                  ),
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: Icon(
-                      isAdding
-                          ? Icons.check_rounded
-                          : Icons.add_rounded,
-                      key: ValueKey(isAdding),
-                      color: Colors.white,
-                      size: 20,
                     ),
                   ),
-                ),
-              ),
+                );
+              }),
             ]),
           ]),
         ),
@@ -1629,6 +1906,172 @@ class _NavItemCart extends StatelessWidget {
           ]),
         ),
       ),
+    );
+  }
+}
+
+// ── Offers strip (home page) ──────────────────────────────────────────────────
+class _OffersStrip extends StatelessWidget {
+  final String           lang;
+  final AppLocalizations l;
+  final Color            surface;
+  final Color            text;
+  final VoidCallback     onSeeAll;
+
+  const _OffersStrip({
+    required this.lang,
+    required this.l,
+    required this.surface,
+    required this.text,
+    required this.onSeeAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<Coupon>>(
+      stream: CouponService().streamAllCoupons(),
+      builder: (context, snap) {
+        // Show compact skeleton row while loading
+        if (snap.connectionState == ConnectionState.waiting) {
+          return SizedBox(
+            height: 110,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              itemCount: 3,
+              itemBuilder: (_, __) => Container(
+                width: 220,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color:        _C.raspberry.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final active = (snap.data ?? [])
+            .where((c) => c.status == CouponStatus.active)
+            .take(5)
+            .toList();
+
+        if (active.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              height: 80,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color:        _C.raspberry.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: Text(
+                l.t('noActiveOffers'),
+                style: TextStyle(
+                    color: text.withValues(alpha: 0.45), fontSize: 13),
+              ),
+            ),
+          );
+        }
+
+        return SizedBox(
+          height: 120,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            padding:
+                const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: active.length,
+            itemBuilder: (context, i) {
+              final c          = active[i];
+              final isPercent  = c.discountType == 'percentage';
+              final valueLabel = isPercent
+                  ? '-${c.discountValue.toStringAsFixed(0)}%'
+                  : '-${l.t('currency')} ${c.discountValue.toStringAsFixed(2)}';
+
+              return GestureDetector(
+                onTap: onSeeAll,
+                child: Container(
+                  width: 230,
+                  margin: const EdgeInsets.only(right: 12),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF521945), Color(0xFF912F56)],
+                      begin: Alignment.topLeft,
+                      end:   Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF912F56)
+                            .withValues(alpha: 0.25),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            c.code,
+                            style: const TextStyle(
+                              color:      Colors.white,
+                              fontSize:   12,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                        const Spacer(),
+                        Text(
+                          valueLabel,
+                          style: const TextStyle(
+                            color:      Color(0xFFFFD700),
+                            fontSize:   16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ]),
+                      const SizedBox(height: 8),
+                      Text(
+                        c.displayTitle(lang),
+                        style: const TextStyle(
+                          color:      Colors.white,
+                          fontSize:   13,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const Spacer(),
+                      Text(
+                        '${l.t('offValidUntil')} '
+                        '${c.validUntil.day.toString().padLeft(2, '0')}/'
+                        '${c.validUntil.month.toString().padLeft(2, '0')}/'
+                        '${c.validUntil.year}',
+                        style: const TextStyle(
+                          color:   Colors.white60,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

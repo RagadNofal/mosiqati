@@ -56,19 +56,34 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
             setState(() => _isZoomed = scale > 1.05);
           },
           child: Center(
-            child: Image.network(
-              widget.imageUrl,
-              fit: BoxFit.contain,
-              loadingBuilder: (context, child, progress) {
-                if (progress == null) return child;
-                return const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                );
-              },
-              errorBuilder: (_, __, ___) => const Center(
-                child: Icon(Icons.broken_image, color: Colors.white54, size: 80),
-              ),
-            ),
+            child: widget.imageUrl.startsWith('http')
+                ? Image.network(
+                    widget.imageUrl,
+                    fit: BoxFit.contain,
+                    loadingBuilder: (context, child, progress) {
+                      if (progress == null) return child;
+                      return const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
+                      );
+                    },
+                    errorBuilder: (_, __, ___) => const Center(
+                      child: Icon(Icons.broken_image,
+                          color: Colors.white54, size: 80),
+                    ),
+                  )
+                : widget.imageUrl.isNotEmpty
+                    ? Image.asset(
+                        widget.imageUrl,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Center(
+                          child: Icon(Icons.broken_image,
+                              color: Colors.white54, size: 80),
+                        ),
+                      )
+                    : const Center(
+                        child: Icon(Icons.music_note_rounded,
+                            color: Colors.white38, size: 80),
+                      ),
           ),
         ),
       ),

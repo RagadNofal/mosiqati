@@ -15,7 +15,6 @@ class _C {
   static const raspberry = Color(0xFF912F56);
   static const plum      = Color(0xFF521945);
   static const wine      = Color(0xFF361F27);
-  static const sage      = Color(0xFF3D7A6A);
   static const bgLight   = Color(0xFFFAF0EE);
   static const bgDark    = Color(0xFF0D090A);
   static const cardD     = Color(0xFF28141E);

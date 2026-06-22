@@ -5,9 +5,11 @@ import 'package:project_assignment_e/l10n/app_localizations.dart';
 import 'package:project_assignment_e/models/product.dart';
 import 'package:project_assignment_e/providers/cart_provider.dart';
 import 'package:project_assignment_e/providers/products_provider.dart';
+import 'package:project_assignment_e/providers/sound_provider.dart';
 import 'package:project_assignment_e/screens/cart_screen.dart';
 import 'package:project_assignment_e/screens/image_viewer_screen.dart';
 import 'package:project_assignment_e/utils/app_colors.dart';
+import 'package:project_assignment_e/widgets/product_image.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
@@ -34,12 +36,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   bool _videoReady = false;
   bool _showVideo  = false;
 
+  int _imageIndex = 0;
+  late final PageController _imgPageCtrl;
+
   late final AnimationController _slideCtrl;
   late final Animation<Offset> _slideAnim;
 
   @override
   void initState() {
     super.initState();
+    _imgPageCtrl = PageController();
     _slideCtrl = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 500),
@@ -50,6 +56,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
     ).animate(CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutCubic));
 
     if (widget.result?.videoUrl != null) _initVideo();
+
+    // Play the matching instrument/category sound once when this screen opens.
+    // Using addPostFrameCallback so the widget tree is mounted before we
+    // read from context.  This fires exactly once — not on rebuild.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _playProductSound();
+    });
   }
 
   Future<void> _initVideo() async {
@@ -65,11 +78,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
   @override
   void dispose() {
     _videoCtrl?.dispose();
+    _imgPageCtrl.dispose();
     _slideCtrl.dispose();
     super.dispose();
   }
 
   Color get _accent => widget.backColor ?? AppColors.primary;
+
+  /// Plays the sound that matches this product's category.
+  /// Falls back to the generic click sound for unknown/studio categories.
+  /// Silently no-ops when sound is disabled or an audio file is missing.
+  void _playProductSound() {
+    final snd = context.read<SoundProvider>();
+    final cat = (widget.result?.category ?? '').toLowerCase();
+    switch (cat) {
+      case 'guitar':
+        snd.playInstrument(InstrumentSound.guitar);
+      case 'piano':
+        snd.playInstrument(InstrumentSound.piano);
+      case 'drums':
+        snd.playInstrument(InstrumentSound.drums);
+      case 'oud':
+        snd.playInstrument(InstrumentSound.oud);
+      case 'studio':
+      case 'studiotools':
+        snd.play(SoundType.click);
+      default:
+        // Unknown category — no sound, just leave it silent.
+        break;
+    }
+  }
 
   void _share() {
     final p = widget.result;
@@ -126,16 +164,25 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  IconButton(
-                    onPressed: _share,
-                    icon: const Icon(Icons.share_rounded, color: Colors.white),
-                    tooltip: l.t('share'),
+                  Semantics(
+                    label: l.t('semShare'),
+                    button: true,
+                    child: IconButton(
+                      onPressed: _share,
+                      icon: const Icon(Icons.share_rounded, color: Colors.white),
+                      tooltip: l.t('share'),
+                    ),
                   ),
-                  IconButton(
+                  Semantics(
+                    label: isFav ? '${l.t('semFavoriteRemove')} ${p?.displayModel(lang) ?? ''}' : '${l.t('semFavoriteAdd')} ${p?.displayModel(lang) ?? ''}',
+                    button: true,
+                    child: IconButton(
                     onPressed: () {
                       HapticFeedback.selectionClick();
                       prodProv.toggleFavorite(p?.id);
-                      ScaffoldMessenger.of(context).showSnackBar(
+                      ScaffoldMessenger.of(context)
+                          ..clearSnackBars()
+                          ..showSnackBar(
                         SnackBar(
                           content: Row(children: [
                             Icon(
@@ -169,8 +216,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                         key: ValueKey(isFav),
                       ),
                     ),
-                  ),
-                  Stack(
+                  ),  // closes IconButton
+                  ),  // closes Semantics (favorite)
+                  Semantics(
+                    label: l.t('semOpenCart'),
+                    child: Stack(
                     clipBehavior: Clip.none,
                     children: [
                       IconButton(
@@ -196,53 +246,100 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                           ),
                         ),
                     ],
-                  ),
+                  ),  // closes Stack
+                  ),  // closes Semantics (cart)
                 ],
               ),
             ),
 
             // ─── Product image / video ─────────────────────────────────────
-            Expanded(
-              flex: 4,
-              child: _showVideo && _videoReady
-                  ? _VideoWidget(ctrl: _videoCtrl!)
-                  : GestureDetector(
-                      onTap: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ImageViewerScreen(
-                            imageUrl: p?.image ?? '',
-                            tag: widget.heroTag,
-                          ),
-                        ),
-                      ),
-                      child: Stack(
+            Builder(builder: (ctx) {
+              final imgList = (p?.images?.isNotEmpty == true)
+                  ? p!.images!
+                  : ((p?.image?.isNotEmpty == true)
+                      ? [p!.image!]
+                      : <String>[]);
+              final hasMany = imgList.length > 1;
+              return Expanded(
+                flex: 4,
+                child: _showVideo && _videoReady
+                    ? _VideoWidget(ctrl: _videoCtrl!)
+                    : Stack(
                         alignment: Alignment.center,
                         children: [
-                          Hero(
-                            tag: widget.heroTag,
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 24, vertical: 8),
-                              child: Image.network(
-                                p?.image ?? '',
-                                fit: BoxFit.contain,
-                                loadingBuilder: (_, child, progress) {
-                                  if (progress == null) return child;
-                                  return const Center(
-                                    child: CircularProgressIndicator(
-                                        color: Colors.white54),
-                                  );
-                                },
-                                errorBuilder: (_, __, ___) => const Center(
+                          imgList.isEmpty
+                              ? const Center(
                                   child: Icon(Icons.music_note_rounded,
-                                      color: Colors.white38, size: 80),
+                                      color: Colors.white38, size: 80))
+                              : PageView.builder(
+                                  controller: _imgPageCtrl,
+                                  itemCount: imgList.length,
+                                  onPageChanged: (i) =>
+                                      setState(() => _imageIndex = i),
+                                  itemBuilder: (_, i) => GestureDetector(
+                                    onTap: () => Navigator.push(
+                                      ctx,
+                                      MaterialPageRoute(
+                                        builder: (_) => ImageViewerScreen(
+                                          imageUrl: imgList[i],
+                                          tag: i == 0
+                                              ? widget.heroTag
+                                              : '${widget.heroTag}_$i',
+                                        ),
+                                      ),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 24, vertical: 8),
+                                      child: i == 0
+                                          ? Hero(
+                                              tag: widget.heroTag,
+                                              child: ProductImageWidget(
+                                                imageUrl: imgList[i],
+                                                fit: BoxFit.contain,
+                                                iconSize: 80,
+                                                iconColor: Colors.white38,
+                                              ),
+                                            )
+                                          : ProductImageWidget(
+                                              imageUrl: imgList[i],
+                                              fit: BoxFit.contain,
+                                              iconSize: 80,
+                                              iconColor: Colors.white38,
+                                            ),
+                                    ),
+                                  ),
+                                ),
+
+                          // Page dots
+                          if (hasMany)
+                            Positioned(
+                              bottom: 8,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: List.generate(
+                                  imgList.length,
+                                  (i) => AnimatedContainer(
+                                    duration:
+                                        const Duration(milliseconds: 200),
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 3),
+                                    width: _imageIndex == i ? 12 : 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: _imageIndex == i
+                                          ? Colors.white
+                                          : Colors.white38,
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+
+                          // Tap to zoom hint
                           Positioned(
-                            bottom: 12,
+                            bottom: hasMany ? 26 : 12,
                             right: 16,
                             child: Container(
                               padding: const EdgeInsets.symmetric(
@@ -259,47 +356,52 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                   const SizedBox(width: 4),
                                   Text(l.t('tapToZoom'),
                                       style: const TextStyle(
-                                          color: Colors.white, fontSize: 11)),
+                                          color: Colors.white,
+                                          fontSize: 11)),
                                 ],
                               ),
                             ),
                           ),
                         ],
                       ),
-                    ),
-            ),
+              );
+            }),
 
             // Video toggle
             if (p?.videoUrl != null)
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
-                child: OutlinedButton.icon(
-                  onPressed: _videoReady
-                      ? () => setState(() => _showVideo = !_showVideo)
-                      : null,
-                  icon: Icon(_showVideo
-                      ? Icons.image_rounded
-                      : Icons.play_circle_fill_rounded),
-                  label: Text(
-                    _showVideo ? l.t('showImage') : l.t('watchVideo'),
-                    style: const TextStyle(fontSize: 13),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(color: Colors.white60),
-                    shape: const StadiumBorder(),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 8),
+                child: Semantics(
+                  label: l.t('semWatchVideo'),
+                  button: true,
+                  child: OutlinedButton.icon(
+                    onPressed: _videoReady
+                        ? () => setState(() => _showVideo = !_showVideo)
+                        : null,
+                    icon: Icon(_showVideo
+                        ? Icons.image_rounded
+                        : Icons.play_circle_fill_rounded),
+                    label: Text(
+                      _showVideo ? l.t('showImage') : l.t('watchVideo'),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: Colors.white,
+                      side: const BorderSide(color: Colors.white60),
+                      shape: const StadiumBorder(),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                    ),
                   ),
                 ),
               ),
 
             // ─── Details sheet ─────────────────────────────────────────────
-            SlideTransition(
-              position: _slideAnim,
-              child: Flexible(
-                flex: 6,
+            Flexible(
+              flex: 6,
+              child: SlideTransition(
+                position: _slideAnim,
                 child: Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -382,32 +484,48 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                     ),
                                   ),
                                 ),
-                                if ((p?.quantity ?? 0) > 0)
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                        top: 6, right: 4),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 7,
-                                          height: 7,
-                                          decoration: const BoxDecoration(
-                                            color: AppColors.sage,
-                                            shape: BoxShape.circle,
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.only(top: 6, right: 4),
+                                  child: (p?.quantity ?? 0) == 0
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 10, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.shade700,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                           ),
+                                          child: Text(
+                                            l.t('outOfStock'),
+                                            style: const TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.w700),
+                                          ),
+                                        )
+                                      : Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 7,
+                                              height: 7,
+                                              decoration: const BoxDecoration(
+                                                color: AppColors.sage,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '${p!.quantity} ${l.t('quantity')}',
+                                              style: const TextStyle(
+                                                  color: AppColors.sage,
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          '${p!.quantity} ${l.t('quantity')}',
-                                          style: const TextStyle(
-                                              color: AppColors.sage,
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                ),
                               ],
                             ),
                           ],
@@ -427,7 +545,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                         _SpecsGrid(product: p, l: l, color: _accent, lang: lang),
 
                         // Description
-                        if (p?.description != null) ...[
+                        if ((p?.displayDescription(lang) ?? '').isNotEmpty) ...[
                           const SizedBox(height: 20),
                           _GradientDivider(color: _accent),
                           const SizedBox(height: 16),
@@ -437,6 +555,64 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                           const SizedBox(height: 8),
                           Text(
                             p!.displayDescription(lang),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7),
+                              height: 1.65,
+                            ),
+                          ),
+                        ],
+
+                        // Specifications (long text)
+                        if (((lang == 'ar'
+                                    ? p?.specificationsAr
+                                    : p?.specificationsEn) ??
+                                '')
+                            .isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _GradientDivider(color: _accent),
+                          const SizedBox(height: 16),
+                          Text(l.t('specifications'),
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 8),
+                          Text(
+                            (lang == 'ar'
+                                    ? p?.specificationsAr
+                                    : p?.specificationsEn) ??
+                                '',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.7),
+                              height: 1.65,
+                            ),
+                          ),
+                        ],
+
+                        // Features
+                        if (((lang == 'ar'
+                                    ? p?.featuresAr
+                                    : p?.featuresEn) ??
+                                '')
+                            .isNotEmpty) ...[
+                          const SizedBox(height: 20),
+                          _GradientDivider(color: _accent),
+                          const SizedBox(height: 16),
+                          Text(l.t('features'),
+                              style: const TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 8),
+                          Text(
+                            (lang == 'ar'
+                                    ? p?.featuresAr
+                                    : p?.featuresEn) ??
+                                '',
                             style: TextStyle(
                               fontSize: 14,
                               color: Theme.of(context)
@@ -508,15 +684,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                         const SizedBox(height: 24),
 
                         // Add to cart
-                        SizedBox(
+                        Semantics(
+                          label: (p == null || (p.quantity ?? 0) == 0)
+                              ? l.t('semOutOfStock')
+                              : '${l.t('semAddToCart')} ${p.displayModel(lang)}',
+                          button: true,
+                          enabled: (p != null && (p.quantity ?? 0) > 0),
+                          child: SizedBox(
                           width: double.infinity,
                           height: 54,
                           child: ElevatedButton.icon(
-                            onPressed: p == null
+                            onPressed: (p == null || (p.quantity ?? 0) == 0)
                                 ? null
                                 : () {
                                     HapticFeedback.mediumImpact();
                                     cartProv.itemAddToCart(p);
+                                    ScaffoldMessenger.of(context)
+                                        .clearSnackBars();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Row(children: [
@@ -542,15 +726,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                                       ),
                                     );
                                   },
-                            icon: const Icon(
-                                Icons.add_shopping_cart_rounded,
-                                size: 20),
-                            label: Text(l.t('addToCart'),
-                                style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w700)),
+                            icon: Icon(
+                              (p?.quantity ?? 0) == 0
+                                  ? Icons.remove_shopping_cart_rounded
+                                  : Icons.add_shopping_cart_rounded,
+                              size: 20,
+                            ),
+                            label: Text(
+                              (p?.quantity ?? 0) == 0
+                                  ? l.t('outOfStock')
+                                  : l.t('addToCart'),
+                              style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700),
+                            ),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: _accent,
+                              backgroundColor: (p?.quantity ?? 0) == 0
+                                  ? Colors.grey.shade500
+                                  : _accent,
                               foregroundColor: Colors.white,
                               shape: const StadiumBorder(),
                               elevation: 4,
@@ -558,6 +751,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen>
                             ),
                           ),
                         ),
+                        ),  // closes Semantics (add to cart)
                       ],
                     ),
                   ),
@@ -583,11 +777,29 @@ class _SpecsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final specs = [
-      (l.t('brand'),    product?.displayBrand(lang) ?? '-',  Icons.business_rounded),
-      (l.t('color'),    product?.displayColour(lang) ?? '-', Icons.palette_rounded),
-      (l.t('weight'),   product?.weight ?? '-', Icons.monitor_weight_rounded),
-      (l.t('quantity'), '${product?.quantity ?? 0}', Icons.inventory_2_rounded),
+    final p   = product;
+    final mat = lang == 'ar' ? p?.materialAr   : p?.materialEn;
+    final war = lang == 'ar' ? p?.warrantyAr   : p?.warrantyEn;
+    final ori = lang == 'ar' ? p?.originCountryAr : p?.originCountryEn;
+    final con = lang == 'ar' ? p?.conditionAr  : p?.conditionEn;
+
+    final specs = <(String, String, IconData)>[
+      (l.t('brand'),    p?.displayBrand(lang) ?? '-',   Icons.business_rounded),
+      (l.t('color'),    p?.displayColour(lang) ?? '-',  Icons.palette_rounded),
+      (l.t('weight'),   p?.weight ?? '-',                Icons.monitor_weight_rounded),
+      (l.t('quantity'), '${p?.quantity ?? 0}',           Icons.inventory_2_rounded),
+      if ((p?.modelNumber ?? '').isNotEmpty)
+        (l.t('modelNumber'),  p!.modelNumber!,  Icons.tag_rounded),
+      if ((p?.dimensions ?? '').isNotEmpty)
+        (l.t('dimensions'),   p!.dimensions!,   Icons.straighten_rounded),
+      if ((mat ?? '').isNotEmpty)
+        (l.t('material'),     mat!,              Icons.layers_rounded),
+      if ((war ?? '').isNotEmpty)
+        (l.t('warranty'),     war!,              Icons.verified_user_rounded),
+      if ((ori ?? '').isNotEmpty)
+        (l.t('originCountry'), ori!,             Icons.flag_rounded),
+      if ((con ?? '').isNotEmpty)
+        (l.t('condition'),    con!,              Icons.new_releases_rounded),
     ];
 
     return GridView.count(

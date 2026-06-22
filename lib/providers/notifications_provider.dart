@@ -4,6 +4,11 @@ class NotificationModel {
   final String id;
   final String titleKey;
   final String bodyKey;
+  // Optional pre-translated strings (used when added programmatically).
+  final String? titleEn;
+  final String? titleAr;
+  final String? bodyEn;
+  final String? bodyAr;
   final IconData icon;
   final Color color;
   final DateTime time;
@@ -11,13 +16,30 @@ class NotificationModel {
 
   NotificationModel({
     required this.id,
-    required this.titleKey,
-    required this.bodyKey,
+    this.titleKey = '',
+    this.bodyKey = '',
+    this.titleEn,
+    this.titleAr,
+    this.bodyEn,
+    this.bodyAr,
     required this.icon,
     required this.color,
     required this.time,
     this.isRead = false,
   });
+
+  /// Returns the display title for the given language code ('en' or 'ar').
+  /// Prefers the pre-translated field; falls back to the localisation key.
+  String getTitle(String lang, String Function(String) t) {
+    if (lang == 'ar') return titleAr ?? (titleKey.isNotEmpty ? t(titleKey) : titleEn ?? '');
+    return titleEn ?? (titleKey.isNotEmpty ? t(titleKey) : '');
+  }
+
+  /// Returns the display body for the given language code ('en' or 'ar').
+  String getBody(String lang, String Function(String) t) {
+    if (lang == 'ar') return bodyAr ?? (bodyKey.isNotEmpty ? t(bodyKey) : bodyEn ?? '');
+    return bodyEn ?? (bodyKey.isNotEmpty ? t(bodyKey) : '');
+  }
 }
 
 class NotificationsProvider extends ChangeNotifier {
@@ -82,6 +104,14 @@ class NotificationsProvider extends ChangeNotifier {
 
   void clearAll() {
     _items.clear();
+    notifyListeners();
+  }
+
+  /// Prepends [notification] to the list, deduplicating by id.
+  /// If a notification with the same id already exists it is replaced.
+  void addNotification(NotificationModel notification) {
+    _items.removeWhere((n) => n.id == notification.id);
+    _items.insert(0, notification);
     notifyListeners();
   }
 }

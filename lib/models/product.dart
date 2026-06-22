@@ -103,11 +103,12 @@ const _arBrands = <String, String>{
 
 /// Category key translations — matches keys used in AppLocalizations.
 const _arCategories = <String, String>{
-  'guitar': 'قيثارة',
-  'piano':  'بيانو',
-  'drums':  'طبول',
-  'oud':    'عود',
-  'studio': 'استوديو',
+  'guitar':      'قيثارة',
+  'piano':       'بيانو',
+  'drums':       'طبول',
+  'oud':         'عود',
+  'studio':      'استوديو',
+  'studiotools': 'أدوات الاستوديو',
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -135,6 +136,27 @@ class Result {
   String? brandAr;
   String? colourAr;
 
+  /// True when this product was loaded from Firestore (not static JSON).
+  /// Used to decide whether to run the stock-deduction transaction at checkout.
+  bool isFirestoreBacked;
+
+  // Extended fields (used by Firestore-backed products).
+  List<String>? images;
+  String? dimensions;
+  String? materialEn;
+  String? materialAr;
+  String? warrantyEn;
+  String? warrantyAr;
+  String? modelNumber;
+  String? originCountryEn;
+  String? originCountryAr;
+  String? conditionEn;
+  String? conditionAr;
+  String? specificationsEn;
+  String? specificationsAr;
+  String? featuresEn;
+  String? featuresAr;
+
   Result({
     this.id,
     this.name,
@@ -153,6 +175,23 @@ class Result {
     this.modelAr,
     this.brandAr,
     this.colourAr,
+    this.isFirestoreBacked = false,
+    // Extended fields
+    this.images,
+    this.dimensions,
+    this.materialEn,
+    this.materialAr,
+    this.warrantyEn,
+    this.warrantyAr,
+    this.modelNumber,
+    this.originCountryEn,
+    this.originCountryAr,
+    this.conditionEn,
+    this.conditionAr,
+    this.specificationsEn,
+    this.specificationsAr,
+    this.featuresEn,
+    this.featuresAr,
   });
 
   factory Result.fromJson(Map<String, dynamic> json) => Result(

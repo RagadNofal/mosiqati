@@ -18,10 +18,6 @@ class _LoginScreenState extends State<LoginScreen> {
   bool  _obscurePass  = true;
   bool  _isLoading    = false;
 
-  static const _raspberry = Color(0xFF912F56);
-  static const _plum      = Color(0xFF521945);
-  static const _wine      = Color(0xFF361F27);
-
   @override
   void dispose() {
     _emailCtrl.dispose();
@@ -141,36 +137,44 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 24),
 
                   // Login button
-                  FilledButton(
-                    onPressed: _isLoading ? null : _login,
-                    style: FilledButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                  Semantics(
+                    label: l.t('semLoginBtn'),
+                    button: true,
+                    child: FilledButton(
+                      onPressed: _isLoading ? null : _login,
+                      style: FilledButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 22,
+                              width:  22,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2.5, color: Colors.white))
+                          : Text(l.t('signIn'),
+                              style: const TextStyle(fontSize: 16)),
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 22,
-                            width:  22,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2.5, color: Colors.white))
-                        : Text(l.t('signIn'),
-                            style: const TextStyle(fontSize: 16)),
                   ),
                   const SizedBox(height: 10),
 
                   // Continue as guest
-                  OutlinedButton(
-                    onPressed: () {
-                      context.read<AppAuthProvider>().continueAsGuest();
-                      Navigator.of(context).popUntil((r) => r.isFirst);
-                    },
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(52),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14)),
+                  Semantics(
+                    label: l.t('semGuestBtn'),
+                    button: true,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        context.read<AppAuthProvider>().continueAsGuest();
+                        Navigator.of(context).popUntil((r) => r.isFirst);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text(l.t('guestMode')),
                     ),
-                    child: Text(l.t('guestMode')),
                   ),
                   const SizedBox(height: 20),
 
